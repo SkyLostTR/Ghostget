@@ -16,12 +16,14 @@ the three Microsoft hosts are reachable, and prints the exact command for each f
 | 6 | `… needs Windows` | `install`, `list` and signature checks only work on Windows. Inside WSL, run ghostget from Windows PowerShell |
 | 7 | `The installer is not signed by Microsoft` | ghostget deleted the file and did not run it. Retry; if it persists, something on your network is altering downloads |
 | 8 | `… is a paid app` | The web installer cannot buy it. Buy it in the Store, or `--force` to open the installer and decide there |
+| 9 | `Windows cannot deploy Store packages right now` | `InstallService`, `ClipSVC` or `AppXSvc` is `Disabled`. `install` catches this before downloading anything; the message names which service(s) and gives the exact `Set-Service` command. Run it (PowerShell as Administrator) and retry, or pass `--force` to download and launch the installer anyway |
 
 ## The Store installer opens but nothing installs
 
-1. Run `ghostget doctor`. A `fail` on `InstallService`, `ClipSVC` or `AppXSvc` means the service is `Disabled`. Set it back to `Manual` (PowerShell as Administrator): `Set-Service -Name InstallService -StartupType Manual`.
+1. `ghostget install` now checks `InstallService`, `ClipSVC` and `AppXSvc` itself before it downloads anything, and stops with exit code 9 and the exact fix if one is `Disabled` (unless the app is `Delivery: WPM`, or you pass `--force`). If you still land here, run `ghostget doctor` — a `fail` on any of those three means the service is `Disabled`. Set it back to `Manual` (PowerShell as Administrator): `Set-Service -Name InstallService -StartupType Manual`.
 2. If `Windows Update (wuauserv)` is `Disabled`, set it to `Manual`. That lets the Store start it on demand and does **not** turn automatic updates back on. Apps the Store delivers through Windows Update (`Delivery: WindowsUpdate` in `ghostget show`) may stall while it is `Disabled`. Apps that show `Delivery: WPM` use the vendor's own installer and do not depend on it.
 3. Look at the installer window: it shows the Store's own error code, which you can search for.
+4. Some apps also need a signed-in Microsoft account (age-rated content, subscriptions, entitlements) — see [below](#the-app-asks-me-to-sign-in). No service fix will get past that; it's Microsoft's own rule for those apps.
 
 ## The app asks me to sign in
 

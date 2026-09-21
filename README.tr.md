@@ -76,7 +76,7 @@ Paket sıradan bir npm CLI'sıdır; npm `bin` girdilerini çalıştıran her ara
 `search`, `show`, `install`, `download` ve `url` komutlarını yapan, bağımlılığı olmayan tek bir dosya. Windows PowerShell 5.1'de (her Windows 10/11'de hazır) ve PowerShell 7'de çalışır.
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.1.0/scripts/ghostget.ps1))) install 9N0DX20HK701
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.2.0/scripts/ghostget.ps1))) install 9N0DX20HK701
 ```
 
 Bağlantıyı bir sürüm etiketine sabitle (yukarıdaki gibi) ve istersen önce betiği oku: tek dosya ve her sürüm SHA-256 değerini yayınlar. Seçenekler PowerShell tarzıdır: `-DryRun`, `-NoVerify`, `-Force`, `-Dir`, `-Market`, `-Locale`, `-Limit`.
@@ -183,11 +183,12 @@ ESM, tipli (JSDoc'tan üretilen `.d.ts`), bağımlılık yok. Tüm fonksiyonlar 
 | 6 | Windows gerekir |
 | 7 | İmza denetimi başarısız, dosya silindi |
 | 8 | Ücretli uygulama (yine de açmak için `--force`) |
+| 9 | `InstallService`, `ClipSVC` veya `AppXSvc` Disabled (yine de kurulum programını başlatmak için `--force`) |
 
 ## SSS
 
 **Windows Update'i açmam gerekiyor mu?**
-ghostget Windows Update istemcisini hiç çağırmaz ve hesap istemez. Ama Store birçok uygulamayı Windows Update altyapısı üzerinden dağıtır (`ghostget show` bunlar için `Delivery: WindowsUpdate` yazar; satıcının kendi kurulum programını kullananlar `WPM` gösterir). Windows Update servisini (`wuauserv`) **Manual** yapmak önerilen asgari ayardır: gerektiğinde başlayabilir ve otomatik güncellemeleri geri açmaz. Servis **Disabled** iken bir uygulamanın kurulup kurulmayacağı, Store'un onu nasıl dağıttığına bağlıdır ve doğrulanmamıştır. `ghostget doctor` bu durumu işaretler ve tek satırlık çözümü yazdırır. `InstallService`, `ClipSVC`, `AppXSvc` ve `BITS` servislerini `Disabled` yapma.
+ghostget Windows Update istemcisini hiç çağırmaz ve hesap istemez. Ama Store birçok uygulamayı Windows Update altyapısı üzerinden dağıtır (`ghostget show` bunlar için `Delivery: WindowsUpdate` yazar; satıcının kendi kurulum programını kullananlar `WPM` gösterir). Windows Update servisini (`wuauserv`) **Manual** yapmak önerilen asgari ayardır: gerektiğinde başlayabilir ve otomatik güncellemeleri geri açmaz. Servis **Disabled** iken bir uygulamanın kurulup kurulmayacağı, Store'un onu nasıl dağıttığına bağlıdır ve doğrulanmamıştır. `ghostget doctor` bu durumu işaretler ve tek satırlık çözümü yazdırır. `InstallService`, `ClipSVC`, `AppXSvc` ve `BITS` servislerini `Disabled` yapma: `install` artık indirmeden önce ilk üçünü kendisi denetliyor; biri kapalıysa (uygulama `WPM` ile dağıtılmadıkça, ya da `--force` verilmedikçe) 9 çıkış koduyla ve tam `Set-Service` komutuyla durur.
 
 **Kurulum penceresi yine de giriş istiyor.**
 Bazı uygulamalar (yaş sınırlı içerik, abonelikler, hak sahipliği) hesap ister; bu Microsoft'un kuralıdır, ghostget'in aşması gereken/aşabileceği bir şey değildir.

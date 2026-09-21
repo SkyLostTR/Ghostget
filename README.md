@@ -74,7 +74,7 @@ The package is a normal npm CLI, so any runner that executes npm `bin` entries w
 One dependency-free file that does `search`, `show`, `install`, `download` and `url`. It runs in Windows PowerShell 5.1 (already on every Windows 10/11) and PowerShell 7.
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.1.0/scripts/ghostget.ps1))) install 9N0DX20HK701
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.2.0/scripts/ghostget.ps1))) install 9N0DX20HK701
 ```
 
 Pin the URL to a release tag (as above) and, if you like, read the script first: it is one file and every release lists its SHA-256. Options are PowerShell-style: `-DryRun`, `-NoVerify`, `-Force`, `-Dir`, `-Market`, `-Locale`, `-Limit`.
@@ -181,11 +181,12 @@ ESM, typed (JSDoc-generated `.d.ts`), no dependencies. Every function is documen
 | 6 | Needs Windows |
 | 7 | Signature check failed, the file was deleted |
 | 8 | Paid app (use `--force` to open the installer anyway) |
+| 9 | `InstallService`, `ClipSVC` or `AppXSvc` is Disabled (use `--force` to launch the installer anyway) |
 
 ## FAQ
 
 **Do I have to turn Windows Update on?**
-ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure (`ghostget show` prints `Delivery: WindowsUpdate` for those; apps that use a vendor's own installer show `WPM`). Setting the Windows Update service (`wuauserv`) to **Manual** is the recommended minimum: it can start on demand and does not turn automatic updates back on. Whether an app installs while the service is **Disabled** depends on how the Store delivers it and has not been verified. `ghostget doctor` flags that setup and prints the one-line fix. Keep `InstallService`, `ClipSVC`, `AppXSvc` and `BITS` out of `Disabled`.
+ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure (`ghostget show` prints `Delivery: WindowsUpdate` for those; apps that use a vendor's own installer show `WPM`). Setting the Windows Update service (`wuauserv`) to **Manual** is the recommended minimum: it can start on demand and does not turn automatic updates back on. Whether an app installs while the service is **Disabled** depends on how the Store delivers it and has not been verified. `ghostget doctor` flags that setup and prints the one-line fix. Keep `InstallService`, `ClipSVC`, `AppXSvc` and `BITS` out of `Disabled`: `install` now checks the first three itself before downloading anything and stops with exit code 9 and the exact `Set-Service` fix if one of them is off (unless the app uses `WPM` delivery, or you pass `--force`).
 
 **The installer window still asks me to sign in.**
 Some apps (age-rated content, subscriptions, entitlements) need an account, and that is Microsoft's rule, not something ghostget can or should get around.

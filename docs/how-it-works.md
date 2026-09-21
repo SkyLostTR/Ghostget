@@ -85,6 +85,12 @@ This is also why `ghostget doctor` looks at the Windows Update service. It is no
 packages are delivered through that infrastructure. Setting the service to **Manual** is the recommended minimum; whether
 an install works with it **Disabled** depends on the app and has not been verified.
 
+Unlike `wuauserv`, `InstallService`, `ClipSVC` and `AppXSvc` are not optional for anything other than `WPM`: without them
+the launched installer cannot hand a package to Windows at all, no matter how the app is delivered. `install` checks the
+three of them before it downloads anything (skipped for `WPM`, since that path never touches Appx deployment) and stops
+with `E_SERVICE_DISABLED` (exit code 9) and the exact `Set-Service … -StartupType Manual` fix if one is `Disabled`.
+`--force` downloads and launches the installer anyway, on the chance the app finishes some other way.
+
 ## What ghostget deliberately does not do
 
 - Sign in, handle credentials, or handle payment.
