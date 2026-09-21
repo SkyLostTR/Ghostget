@@ -5,7 +5,7 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, beforeEach, test } from 'node:test';
-import { GhostgetError, buildInstallerUrl, downloadInstaller, isTrustedMicrosoftSignature } from '../src/index.js';
+import { GhostgetError, buildInstallerUrl, disabledDeploymentServices, downloadInstaller, isTrustedMicrosoftSignature } from '../src/index.js';
 import { parseContentDisposition, safeFileName } from '../src/installer.js';
 import { REAL_DISPOSITION, fakeExe, startMockStore } from './support/mock-store.js';
 
@@ -63,6 +63,33 @@ test('only a valid Microsoft Corporation signature is trusted', () => {
   assert.equal(isTrustedMicrosoftSignature({ status: 'Valid', subject: 'CN=Microsoft Corporation, OU=O=Microsoft Corporation' }), false);
   assert.equal(isTrustedMicrosoftSignature(null), false);
   assert.equal(isTrustedMicrosoftSignature({}), false);
+});
+
+test('a Disabled Store deployment service is reported, unless the app is WPM', () => {
+  const allEnabled = [
+    { name: 'InstallService', startType: 'Manual' },
+    { name: 'ClipSVC', startType: 'Manual' },
+    { name: 'AppXSvc', startType: 'Automatic' },
+  ];
+  assert.deepEqual(disabledDeploymentServices(allEnabled, 'WindowsUpdate'), []);
+
+  const oneDisabled = [
+    { name: 'InstallService', startType: 'Disabled' },
+    { name: 'ClipSVC', startType: 'Manual' },
+    { name: 'AppXSvc', startType: 'Automatic' },
+  ];
+  assert.deepEqual(disabledDeploymentServices(oneDisabled, 'WindowsUpdate'), ['InstallService']);
+  assert.deepEqual(disabledDeploymentServices(oneDisabled, null), ['InstallService'], 'unknown delivery is treated like WindowsUpdate');
+  assert.deepEqual(disabledDeploymentServices(oneDisabled, 'WPM'), [], 'WPM apps use the vendor installer, not Appx deployment');
+
+  const allDisabled = [
+    { name: 'InstallService', startType: 'Disabled' },
+    { name: 'ClipSVC', startType: 'Disabled' },
+    { name: 'AppXSvc', startType: 'Disabled' },
+  ];
+  assert.deepEqual(disabledDeploymentServices(allDisabled, 'WindowsUpdate'), ['InstallService', 'ClipSVC', 'AppXSvc']);
+
+  assert.deepEqual(disabledDeploymentServices([], 'WindowsUpdate'), [], 'a service ghostget could not read is not assumed Disabled');
 });
 
 // --- downloads against the mock server -------------------------------------------------------

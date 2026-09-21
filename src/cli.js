@@ -128,7 +128,7 @@ Options
       --dry-run        install: show what would happen, change nothing
       --wait           install: wait until the app shows up as installed (Store packages)
       --timeout <min>  install: how long --wait may take (default 10)
-  -f, --force          install: proceed for paid or already-installed apps
+  -f, --force          install: proceed for paid apps, already-installed apps, and disabled Store services
       --no-verify      skip the Microsoft signature check (not recommended)
   -d, --dir <path>     where to keep the downloaded installer
       --market <CC>    Store market, e.g. US or TR (default: from your system)

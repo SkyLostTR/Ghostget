@@ -14,6 +14,7 @@ export { resolveProduct } from './resolve.js';
 export {
   assertTrustedInstaller,
   buildInstallerUrl,
+  disabledDeploymentServices,
   downloadInstaller,
   installApp,
   isTrustedMicrosoftSignature,

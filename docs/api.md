@@ -76,7 +76,7 @@ The whole flow. Windows only, except with `dryRun`.
 | Option | Meaning |
 | --- | --- |
 | `dryRun` | Resolve and report; download and run nothing |
-| `force` | Proceed for paid apps, and for apps that are already installed |
+| `force` | Proceed for paid apps, apps that are already installed, and when a Store deployment service is Disabled |
 | `noVerify` | Skip the signature check (not recommended) |
 | `wait`, `waitTimeoutMs` | After launching, poll until the app is installed (Store packages only). Default 10 min |
 | `dir` | Keep the installer here. Default: a temp folder, cleaned after a day |
@@ -131,6 +131,7 @@ Everything ghostget throws on purpose is a `GhostgetError` with `code`, `exitCod
 | `E_UNSUPPORTED_PLATFORM` | 6 | A Windows-only step on another OS |
 | `E_SIGNATURE` | 7 | The installer was not validly signed by Microsoft (`details.status`, `details.subject`) |
 | `E_PAID` | 8 | The app is not free |
+| `E_SERVICE_DISABLED` | 9 | `InstallService`, `ClipSVC` or `AppXSvc` is Disabled, so Windows cannot deploy the package (`details.services`) |
 | `E_POWERSHELL` | 1 | PowerShell could not run or answered something unexpected |
 | `E_CANCELLED` | 1 | The user cancelled a prompt |
 

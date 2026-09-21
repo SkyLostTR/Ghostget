@@ -11,6 +11,7 @@ export const EXIT = Object.freeze({
   UNSUPPORTED: 6,
   VERIFY: 7,
   PAID: 8,
+  SERVICE: 9,
 });
 
 export class GhostgetError extends Error {
