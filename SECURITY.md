@@ -1,6 +1,7 @@
 # Security policy
 
-ghostget downloads and starts an executable, so security reports are taken seriously.
+ghostget downloads and starts an executable, so security reports are taken seriously. The project is maintained by
+[SkyLostTR](https://github.com/SkyLostTR) (`@Keeftraum`).
 
 ## Reporting a vulnerability
 

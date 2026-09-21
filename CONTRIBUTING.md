@@ -1,6 +1,7 @@
 # Contributing
 
-Thanks for helping. This project is small on purpose: zero runtime dependencies, one job, done carefully.
+Thanks for helping. Ghostget is created and maintained by [SkyLostTR](https://github.com/SkyLostTR) (`@Keeftraum`); this
+project is small on purpose: zero runtime dependencies, one job, done carefully.
 
 ## Setup
 
@@ -29,6 +30,7 @@ src/ui.js              colour, tables, spinner, progress (no dependencies)
 scripts/ghostget.ps1   the dependency-free PowerShell edition
 test/                  node:test tests, a mock of the Microsoft hosts, trimmed real fixtures
 docs/                  how it works, API, troubleshooting
+website/               the ghostget.kief.fi site (static HTML/CSS/JS, no build step)
 ```
 
 Rules that keep it maintainable:

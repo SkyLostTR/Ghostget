@@ -3,6 +3,8 @@
 # 👻 Ghostget
 
 **Install Microsoft Store apps from your terminal, without signing in.**
+<br>
+<sub>Created by <a href="https://github.com/SkyLostTR"><strong>SkyLostTR</strong></a> (<code>@Keeftraum</code>)</sub>
 
 [![npm](https://img.shields.io/npm/v/ghostget?color=cb3837)](https://www.npmjs.com/package/ghostget)
 [![CI](https://github.com/SkyLostTR/ghostget/actions/workflows/ci.yml/badge.svg)](https://github.com/SkyLostTR/ghostget/actions/workflows/ci.yml)
@@ -10,7 +12,7 @@
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
 ![dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen)
 
-English · [Türkçe](README.tr.md)
+**[Website & docs](https://ghostget.kief.fi)** · English · [Türkçe](README.tr.md)
 
 </div>
 
@@ -46,6 +48,9 @@ npx ghostget search terminal          # find an app
 npx ghostget show 9N0DX20HK701        # price, size, package family
 npx ghostget install 9N0DX20HK701     # install it
 ```
+
+📖 Prefer a visual walkthrough? **[ghostget.kief.fi](https://ghostget.kief.fi)** has the full documentation site — getting
+started, every command and option, the library API, the safety model, and troubleshooting, all in one place.
 
 `npx` asks once before downloading the package; add `--yes` to skip that in scripts. You can also pass a name (`install "windows terminal"`) or a Store URL. If a name matches more than one app, ghostget asks which, or fails with the list. It never guesses.
 
@@ -213,10 +218,29 @@ node bin/ghostget.js doctor
 
 Tests never touch the network. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Running the website locally
+
+The [website](https://ghostget.kief.fi) is a static, dependency-free site in [`website/`](website). Preview it with any
+static server, for example:
+
+```bash
+npx serve website
+# or: python3 -m http.server -d website 8080
+```
+
+It deploys automatically to GitHub Pages (see [`.github/workflows/pages.yml`](.github/workflows/pages.yml)) whenever
+`website/` changes on `main`.
+
 ## Roadmap
 
 `uninstall` and `upgrade` · a single-file `.exe` (Node SEA) · a Scoop bucket · WSL bridge that hands `install` to the Windows side.
 
+## Author & credits
+
+Ghostget is created and maintained by **[SkyLostTR](https://github.com/SkyLostTR)** (`@Keeftraum`), with thanks to everyone
+who files issues, refreshes fixtures against live Microsoft responses, and reviews pull requests — see the
+[contributors graph](https://github.com/SkyLostTR/ghostget/graphs/contributors).
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 [SkyLostTR](https://github.com/SkyLostTR) and ghostget contributors
