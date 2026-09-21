@@ -1,0 +1,43 @@
+{
+  "Data": [
+    {
+      "PackageIdentifier": "9NQ7512CXL7T",
+      "PackageName": "Python Install Manager",
+      "Publisher": "Python Software Foundation",
+      "Versions": [
+        {
+          "PackageVersion": "Unknown",
+          "PackageFamilyNames": [
+            "PythonSoftwareFoundation.PythonManager_qbz5n2kfra8p0"
+          ]
+        }
+      ]
+    },
+    {
+      "PackageIdentifier": "9NCVDN91XZQP",
+      "PackageName": "Python 3.12",
+      "Publisher": "Python Software Foundation",
+      "Versions": [
+        {
+          "PackageVersion": "Unknown",
+          "PackageFamilyNames": [
+            "PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0"
+          ]
+        }
+      ]
+    },
+    {
+      "PackageIdentifier": "9PNRBTZXMB4Z",
+      "PackageName": "Python 3.13",
+      "Publisher": "Python Software Foundation",
+      "Versions": [
+        {
+          "PackageVersion": "Unknown",
+          "PackageFamilyNames": [
+            "PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0"
+          ]
+        }
+      ]
+    }
+  ]
+}

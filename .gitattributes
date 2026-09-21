@@ -1,0 +1,5 @@
+# LF everywhere, including the PowerShell script, so the file GitHub serves,
+# the release asset and its published SHA-256 are all byte-identical.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary

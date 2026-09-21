@@ -1,0 +1,112 @@
+{
+  "Products": [
+    {
+      "ProductId": "9PGLL77C201J",
+      "ProductKind": "Game",
+      "LastModifiedDate": "2026-08-20T10:21:18.4660218Z",
+      "Properties": {
+        "Category": "Action & adventure",
+        "PackageFamilyName": ""
+      },
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "Marvel's Guardians of the Galaxy",
+          "PublisherName": "Eidos Interactive Corporation",
+          "PublisherWebsiteUri": "www.eidosmontreal.com",
+          "ProductDescription": "Digital download bonus:\n- Social-Lord Outfit for Star-Lord (Early Unlock)\n\nFire up Star-Lord’s jet boots for a wild ride across the cosmos in this third-person "
+        }
+      ],
+      "MarketProperties": [
+        {
+          "OriginalReleaseDate": "2021-10-26T04:00:00.0000000Z",
+          "MinimumUserAge": 16,
+          "UsageData": [
+            {
+              "AggregateTimeSpan": "7Days",
+              "AverageRating": 5,
+              "PlayCount": 0,
+              "RatingCount": 7,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "30Days",
+              "AverageRating": 4.8,
+              "PlayCount": 0,
+              "RatingCount": 52,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            }
+          ]
+        }
+      ],
+      "DisplaySkuAvailabilities": [
+        {
+          "Sku": {
+            "SkuType": "full",
+            "Properties": {
+              "Packages": []
+            }
+          },
+          "Availabilities": [
+            {
+              "Actions": [
+                "Details",
+                "Purchase",
+                "Browse",
+                "Curate",
+                "Redeem"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 59.99,
+                  "CurrencyCode": "USD"
+                }
+              }
+            },
+            {
+              "Actions": [
+                "Details"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 0,
+                  "CurrencyCode": "USD"
+                }
+              }
+            },
+            {
+              "Actions": [
+                "Details",
+                "Browse",
+                "Curate",
+                "Gift"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 59.99,
+                  "CurrencyCode": "USD"
+                }
+              }
+            },
+            {
+              "Actions": [
+                "License",
+                "Browse",
+                "Details"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 0,
+                  "CurrencyCode": "USD"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

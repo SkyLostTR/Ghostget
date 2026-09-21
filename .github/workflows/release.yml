@@ -1,0 +1,55 @@
+name: Release
+
+# Push a tag such as v0.2.0 (npm version does this) to publish to npm and create a GitHub release.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write   # create the GitHub release
+  id-token: write   # npm provenance
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+
+      - name: The tag must match package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Checksum of the PowerShell edition
+        run: (cd scripts && sha256sum ghostget.ps1) > ghostget.ps1.sha256
+
+      - name: GitHub release
+        run: gh release create "$GITHUB_REF_NAME" scripts/ghostget.ps1 ghostget.ps1.sha256 --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

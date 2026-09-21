@@ -1,0 +1,27 @@
+{
+  "Payload": {
+    "ProductId": "XP9KHM4BK9FZ7Q",
+    "Title": "Visual Studio Code",
+    "PublisherName": "Microsoft Corporation",
+    "Description": "Visual Studio Code is a free, lightweight, and extensible code editor for building web, desktop, and mobile applications, using any programming language and framework.\n\nVisual Studio Code has built-in",
+    "ShortDescription": "Free, lightweight, extensible code editor for building web, desktop, and mobile applications, using any programming language and framework.",
+    "DisplayPrice": "Free",
+    "Price": 0,
+    "Categories": [
+      "Developer tools"
+    ],
+    "AverageRating": 3.9,
+    "RatingCount": 8767,
+    "LastUpdateDateUtc": "2021-08-16T19:35:01Z",
+    "ProductType": "APPLICATION",
+    "AppWebsiteUrl": "https://code.visualstudio.com/",
+    "Platforms": [
+      "x64",
+      "ARM64"
+    ],
+    "Installer": {
+      "Type": "WPM",
+      "Id": "XP9KHM4BK9FZ7Q"
+    }
+  }
+}

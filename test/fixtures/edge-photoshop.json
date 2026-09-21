@@ -1,0 +1,26 @@
+{
+  "Payload": {
+    "ProductId": "XPFD4T9N395QN6",
+    "Title": "Adobe Photoshop",
+    "PublisherName": "ADOBE INC.",
+    "Description": "*A qualifying Adobe Photoshop subscription is required. Non-subscribers may try the product free for 7 days before incurring the monthly Photoshop subscription fee.* \n\nAdobe Photoshop is the industry-",
+    "ShortDescription": "Photoshop is an image creation, graphic design and photo editing software developed by Adobe.",
+    "DisplayPrice": "Paid",
+    "Price": 0,
+    "Categories": [
+      "Photo & video"
+    ],
+    "AverageRating": 4.5,
+    "RatingCount": 3528,
+    "LastUpdateDateUtc": "2023-06-21T05:01:49Z",
+    "ProductType": "APPLICATION",
+    "AppWebsiteUrl": "https://www.adobe.com/products/photoshop.html",
+    "Platforms": [
+      "x64"
+    ],
+    "Installer": {
+      "Type": "WPM",
+      "Id": "XPFD4T9N395QN6"
+    }
+  }
+}

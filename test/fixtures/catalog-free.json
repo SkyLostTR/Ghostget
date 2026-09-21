@@ -1,0 +1,117 @@
+{
+  "Products": [
+    {
+      "ProductId": "9N8CJ4W95TBZ",
+      "ProductKind": "Application",
+      "LastModifiedDate": "2026-07-30T20:17:08.4387471Z",
+      "Properties": {
+        "Category": "Developer tools",
+        "PackageFamilyName": "OpenAI.CodexBeta_2p2nqsd0c76g0"
+      },
+      "LocalizedProperties": [
+        {
+          "ProductTitle": "ChatGPT (Beta)",
+          "PublisherName": "OpenAI",
+          "PublisherWebsiteUri": "https://openai.com/codex/",
+          "ProductDescription": "ChatGPT Beta  is your everyday AI assistant for Windows. Use Chat to ask questions, explore ideas, write, learn, and work through everyday tasks.\n\nWhen you need"
+        }
+      ],
+      "MarketProperties": [
+        {
+          "OriginalReleaseDate": "2026-03-28T01:28:32.0000000Z",
+          "MinimumUserAge": 0,
+          "UsageData": [
+            {
+              "AggregateTimeSpan": "7Days",
+              "AverageRating": 3.7,
+              "PlayCount": 0,
+              "RatingCount": 3,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            },
+            {
+              "AggregateTimeSpan": "30Days",
+              "AverageRating": 4.2,
+              "PlayCount": 0,
+              "RatingCount": 42,
+              "RentalCount": "0",
+              "TrialCount": "0",
+              "PurchaseCount": "0"
+            }
+          ]
+        }
+      ],
+      "DisplaySkuAvailabilities": [
+        {
+          "Sku": {
+            "SkuType": "full",
+            "Properties": {
+              "Packages": [
+                {
+                  "Architectures": [
+                    "x64"
+                  ],
+                  "MaxDownloadSizeInBytes": 759383899,
+                  "PackageFamilyName": "OpenAI.CodexBeta_2p2nqsd0c76g0",
+                  "PackageFullName": "OpenAI.CodexBeta_26.727.4816.0_x64__2p2nqsd0c76g0"
+                },
+                {
+                  "Architectures": [
+                    "arm64"
+                  ],
+                  "MaxDownloadSizeInBytes": 753377744,
+                  "PackageFamilyName": "OpenAI.CodexBeta_2p2nqsd0c76g0",
+                  "PackageFullName": "OpenAI.CodexBeta_26.727.4816.0_arm64__2p2nqsd0c76g0"
+                }
+              ]
+            }
+          },
+          "Availabilities": [
+            {
+              "Actions": [
+                "Details",
+                "Fulfill",
+                "Purchase",
+                "Browse",
+                "Curate",
+                "Redeem"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 0,
+                  "CurrencyCode": "USD"
+                }
+              }
+            },
+            {
+              "Actions": [
+                "License",
+                "Browse",
+                "Details"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 0,
+                  "CurrencyCode": "USD"
+                }
+              }
+            },
+            {
+              "Actions": [
+                "License",
+                "Details"
+              ],
+              "OrderManagementData": {
+                "Price": {
+                  "ListPrice": 0,
+                  "CurrencyCode": "USD"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

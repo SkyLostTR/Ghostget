@@ -1,0 +1,60 @@
+{
+  "Payload": {
+    "SearchResults": [
+      {
+        "ProductId": "9NCBCSZSJRSB",
+        "Title": "Spotify - Music and Podcasts",
+        "PublisherName": "Spotify AB",
+        "DisplayPrice": "Free",
+        "Price": 0,
+        "Categories": [
+          "Music"
+        ],
+        "AverageRating": 4.3,
+        "PackageFamilyNames": [
+          "SpotifyAB.SpotifyMusic_zpdnekdrzrea0"
+        ],
+        "Installer": {
+          "Type": "WindowsUpdate",
+          "Id": "9NCBCSZSJRSB"
+        }
+      },
+      {
+        "ProductId": "9PFHDD62MXS1",
+        "Title": "Apple Music",
+        "PublisherName": "Apple Inc.",
+        "DisplayPrice": "Free",
+        "Price": 0,
+        "Categories": [
+          "Music"
+        ],
+        "AverageRating": 4,
+        "PackageFamilyNames": [
+          "AppleInc.AppleMusicWin_nzyj5cx40ttqa"
+        ],
+        "Installer": {
+          "Type": "WindowsUpdate",
+          "Id": "9PFHDD62MXS1"
+        }
+      },
+      {
+        "ProductId": "9NBLGGH1RRH1",
+        "Title": "JioSaavn Music & Radio",
+        "PublisherName": "Saavn",
+        "DisplayPrice": "Free",
+        "Price": 0,
+        "Categories": [
+          "Music"
+        ],
+        "AverageRating": 4,
+        "PackageFamilyNames": [
+          "Saavn.SaavnMusicRadio_ax02tpqam95xr"
+        ],
+        "Installer": {
+          "Type": "WindowsUpdate",
+          "Id": "9NBLGGH1RRH1"
+        }
+      }
+    ]
+  }
+}

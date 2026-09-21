@@ -1,0 +1,64 @@
+{
+  "name": "ghostget",
+  "version": "0.1.0",
+  "description": "winget-style CLI and library that installs Microsoft Store apps without signing in. No Microsoft account, no winget msstore source.",
+  "keywords": [
+    "winget",
+    "microsoft-store",
+    "msstore",
+    "windows",
+    "installer",
+    "package-manager",
+    "cli",
+    "npx",
+    "no-login"
+  ],
+  "homepage": "https://github.com/SkyLostTR/ghostget#readme",
+  "bugs": {
+    "url": "https://github.com/SkyLostTR/ghostget/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SkyLostTR/ghostget.git"
+  },
+  "license": "MIT",
+  "author": "ghostget contributors",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "ghostget": "bin/ghostget.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "types",
+    "scripts/ghostget.ps1",
+    "README.md",
+    "README.tr.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "test": "node --test",
+    "typecheck": "tsc -p tsconfig.json",
+    "build:types": "tsc -p tsconfig.build.json",
+    "check": "npm run typecheck && npm test",
+    "prepack": "npm run build:types",
+    "version": "node scripts/sync-version.mjs && git add scripts/ghostget.ps1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
