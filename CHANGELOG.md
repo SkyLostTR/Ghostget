@@ -3,6 +3,16 @@
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Documentation website at [ghostget.kief.fi](https://ghostget.kief.fi) (`website/`), deployed to GitHub Pages via
+  [`.github/workflows/pages.yml`](.github/workflows/pages.yml): a landing page and a full docs/wiki hub covering getting
+  started, commands, configuration, the library API, the safety model, and troubleshooting.
+- Author and credits sections crediting [SkyLostTR](https://github.com/SkyLostTR) (`@Keeftraum`) across the README,
+  `package.json`, `LICENSE` and the website.
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

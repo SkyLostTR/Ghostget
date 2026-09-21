@@ -3,6 +3,8 @@
 # 👻 ghostget
 
 **Microsoft Store uygulamalarını terminalden, giriş yapmadan kur.**
+<br>
+<sub><a href="https://github.com/SkyLostTR"><strong>SkyLostTR</strong></a> (<code>@Keeftraum</code>) tarafından geliştirildi</sub>
 
 [![npm](https://img.shields.io/npm/v/ghostget?color=cb3837)](https://www.npmjs.com/package/ghostget)
 [![CI](https://github.com/SkyLostTR/ghostget/actions/workflows/ci.yml/badge.svg)](https://github.com/SkyLostTR/ghostget/actions/workflows/ci.yml)
@@ -10,7 +12,7 @@
 ![node](https://img.shields.io/badge/node-%E2%89%A520-339933)
 ![dependencies](https://img.shields.io/badge/runtime%20dependencies-0-brightgreen)
 
-[English](README.md) · Türkçe
+**[Web sitesi ve dokümantasyon](https://ghostget.kief.fi)** · [English](README.md) · Türkçe
 
 </div>
 
@@ -48,6 +50,9 @@ npx ghostget search terminal          # uygulama ara
 npx ghostget show 9N0DX20HK701        # fiyat, boyut, paket ailesi
 npx ghostget install 9N0DX20HK701     # kur
 ```
+
+📖 Görsel bir anlatım mı istiyorsun? **[ghostget.kief.fi](https://ghostget.kief.fi)** adresinde tüm dokümantasyon var:
+başlangıç, her komut ve seçenek, kütüphane API'si, güvenlik modeli ve sorun giderme, tek bir yerde.
 
 `npx` paketi ilk indirmeden önce bir kez sorar; betiklerde `--yes` ekle. Kimlik yerine ad (`install "windows terminal"`) veya Store bağlantısı da verebilirsin. Bir ad birden fazla uygulamaya uyuyorsa ghostget hangisini istediğini sorar ya da listeyle birlikte hata verir. **Asla tahmin etmez.**
 
@@ -220,6 +225,12 @@ Testler asla ağa çıkmaz. Bkz. [CONTRIBUTING.md](CONTRIBUTING.md).
 
 `uninstall` ve `upgrade` · tek dosyalık `.exe` (Node SEA) · Scoop bucket · `install`'ı Windows tarafına devreden WSL köprüsü.
 
+## Geliştirici ve emek verenler
+
+ghostget, **[SkyLostTR](https://github.com/SkyLostTR)** (`@Keeftraum`) tarafından geliştirilir ve sürdürülür. Sorun bildiren,
+Microsoft'un canlı servislerine karşı test verilerini güncelleyen ve pull request inceleyen herkese teşekkürler — bkz.
+[katkıda bulunanlar](https://github.com/SkyLostTR/ghostget/graphs/contributors).
+
 ## Lisans
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 [SkyLostTR](https://github.com/SkyLostTR) ve ghostget katkıda bulunanları

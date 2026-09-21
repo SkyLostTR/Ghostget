@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ghostget — install Microsoft Store apps from your terminal, without signing in</title>
+<meta name="description" content="Ghostget is a zero-dependency, winget-style CLI and library that installs Microsoft Store apps without a Microsoft account. Created by SkyLostTR.">
+<meta name="author" content="SkyLostTR (@Keeftraum)">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://ghostget.kief.fi/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ghostget — install Microsoft Store apps from your terminal, without signing in">
+<meta property="og:description" content="A zero-dependency, winget-style CLI and library that installs Microsoft Store apps without a Microsoft account. Created by SkyLostTR (@Keeftraum).">
+<meta property="og:url" content="https://ghostget.kief.fi/">
+<meta property="og:site_name" content="Ghostget">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ghostget">
+<meta name="twitter:description" content="Install Microsoft Store apps from your terminal, without signing in.">
+
+<link rel="stylesheet" href="assets/css/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "Ghostget",
+  "description": "Winget-style CLI and library that installs Microsoft Store apps without signing in.",
+  "codeRepository": "https://github.com/SkyLostTR/ghostget",
+  "programmingLanguage": "JavaScript",
+  "license": "https://github.com/SkyLostTR/ghostget/blob/main/LICENSE",
+  "author": {
+    "@type": "Person",
+    "name": "SkyLostTR",
+    "alternateName": "Keeftraum",
+    "url": "https://github.com/SkyLostTR"
+  }
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="credit-banner">
+  👻 Ghostget is created and maintained by <a href="https://github.com/SkyLostTR" target="_blank" rel="noopener">SkyLostTR</a> <span class="mono">(@Keeftraum)</span> — <a href="https://github.com/sponsors/SkyLostTR" target="_blank" rel="noopener">say thanks with a star</a>
+</div>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="index.html">
+      <img class="ghost-logo" src="assets/img/ghost.svg" alt="" width="28" height="28">
+      Ghostget
+      <small>v0.2.0</small>
+    </a>
+    <nav class="main-nav" aria-label="Primary">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#how-it-works">How it works</a>
+      <a href="index.html#install">Install</a>
+      <a href="index.html#compare">Why not winget</a>
+      <a href="docs.html">Docs</a>
+      <a href="docs.html#faq">FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" data-theme-toggle type="button" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <a class="btn btn-secondary" href="https://github.com/SkyLostTR/ghostget" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.29 9.4 7.86 10.93.58.1.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.53-1.33-1.29-1.69-1.29-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14 0 1.54-.01 2.79-.01 3.17 0 .31.21.67.8.56C20.71 21.39 24 17.09 24 12c0-6.35-5.15-11.5-12-11.5Z"/></svg>
+        GitHub
+      </a>
+      <a class="btn btn-primary" href="docs.html">
+        Read the docs
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <button class="icon-btn nav-toggle" data-nav-toggle type="button" aria-label="Toggle menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu" data-mobile-menu>
+    <a href="index.html#features">Features</a>
+    <a href="index.html#how-it-works">How it works</a>
+    <a href="index.html#install">Install</a>
+    <a href="index.html#compare">Why not winget</a>
+    <a href="docs.html">Docs</a>
+    <a href="docs.html#faq">FAQ</a>
+    <a href="https://github.com/SkyLostTR/ghostget" target="_blank" rel="noopener">GitHub ↗</a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5l-6.2 4.5 2.4-7.3L2 9.2h7.6z"/></svg>
+        Zero runtime dependencies · MIT licensed
+      </span>
+      <h1>Install Microsoft Store apps <span class="accent-text">without signing in.</span></h1>
+      <p class="lead">Ghostget is a winget-style CLI and Node.js library that fetches Microsoft's own signed web installer and runs it — the same thing the <strong>Get</strong> button on the Store website does, minus the account requirement.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="docs.html#getting-started">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          Get started
+        </a>
+        <a class="btn btn-secondary" href="index.html#how-it-works">See how it works</a>
+        <a class="btn btn-ghost" href="https://www.npmjs.com/package/ghostget" target="_blank" rel="noopener">View on npm</a>
+      </div>
+      <div class="hero-meta">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> No Microsoft account</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Signature-verified installers</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Works from npx or PowerShell</span>
+      </div>
+      <div class="badges-row">
+        <img src="https://img.shields.io/npm/v/ghostget?color=cb3837" alt="npm version" loading="lazy">
+        <img src="https://github.com/SkyLostTR/ghostget/actions/workflows/ci.yml/badge.svg" alt="CI status" loading="lazy">
+        <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" loading="lazy">
+        <img src="https://img.shields.io/badge/node-%E2%89%A520-339933" alt="Node 20+" loading="lazy">
+        <img src="https://img.shields.io/badge/runtime%20dependencies-0-brightgreen" alt="zero runtime dependencies" loading="lazy">
+      </div>
+    </div>
+
+    <div class="terminal" aria-hidden="false" role="img" aria-label="Terminal demo of ghostget search and install">
+      <div class="terminal-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="terminal-title">zsh — ghostget</span>
+      </div>
+      <div class="terminal-body" data-typed-terminal>
+        <p class="line" data-type><span class="prompt">$</span> <span class="cmd">npx ghostget search terminal --limit 3</span></p>
+        <p class="line out" data-type>Name                      Id            Publisher              Price</p>
+        <p class="line out" data-type>--------------------------------------------------------------------</p>
+        <p class="line out" data-type>Windows Terminal          9N0DX20HK701  Microsoft Corporation  Free</p>
+        <p class="line out" data-type>Windows Terminal Preview  9N8G5RFZ9XK3  Microsoft Corporation  Free</p>
+        <p class="line out" data-type>terminalpp                9NNH6JQFJ7HD  Zduka                  Free</p>
+        <p class="line" data-type>&nbsp;</p>
+        <p class="line" data-type><span class="prompt">$</span> <span class="cmd">npx ghostget install "windows terminal" --dry-run</span></p>
+        <p class="line ok" data-type>✔ Found Windows Terminal [9N0DX20HK701] · Microsoft Corporation · Free</p>
+        <p class="line ok" data-type>✔ Dry run: nothing was downloaded or launched.</p>
+        <p class="line accent" data-type>  Installer  https://get.microsoft.com/installer/download/9N0DX20HK701</p>
+        <p class="line muted" data-type>  Steps      download, verify the Microsoft signature, launch the Store installer</p>
+        <p class="line" data-type><span class="prompt">$</span> <span class="cursor"></span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="alt-bg" id="why">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">The problem</span>
+      <h2>winget's Store source needs an account. This doesn't.</h2>
+      <p><code>winget install --source msstore &lt;id&gt;</code> fails without a signed-in Microsoft Store account:</p>
+    </div>
+    <div class="code-block" data-copy="Verifying/Requesting package acquisition failed: no store account found">
+      <button class="copy-btn" type="button" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      <code>Verifying/Requesting package acquisition failed: no store account found</code>
+    </div>
+    <p class="text-center" style="max-width:70ch;margin:22px auto 0;color:var(--text-dim)">
+      The <strong>Get</strong> button on the Store website doesn't need that. It downloads a small installer that Microsoft signs, and that installer asks the Store to do the rest. <strong>Ghostget automates exactly that</strong>: find the app, fetch Microsoft's own web installer, check its signature, run it. No account, no sign-in, no <code>winget</code>.
+    </p>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">Features</span>
+      <h2>Built to be trusted, scripted, and left alone</h2>
+      <p>Every design choice favours safety and predictability over cleverness.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3Z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1M12 19v3"/></svg></div>
+        <h3>No account, ever</h3>
+        <p>Uses the same public endpoints and web installer link Microsoft's own Store website hands to every visitor.</p>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>Verifies before it runs</h3>
+        <p>The installer must carry a valid Authenticode signature from Microsoft Corporation, or it is deleted and never started.</p>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7a2 2 0 0 1 2-2h6l6 6v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M12 5v6h6"/></svg></div>
+        <h3>winget-like commands</h3>
+        <p><code>search</code>, <code>show</code>, <code>install</code>, <code>list</code>, plus <code>download</code>, <code>url</code> and <code>doctor</code>.</p>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <h3>Safe defaults</h3>
+        <p>Refuses paid apps, never picks between look-alike apps for you, never elevates, never changes system settings.</p>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+        <h3>Scriptable</h3>
+        <p><code>--json</code> everywhere, quiet stdout, stable exit codes. Built for CI and automation, not just interactive use.</p>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <h3>Zero dependencies</h3>
+        <p>Runs from <code>npx</code>, as a library, or as a single dependency-free PowerShell file on a PC without Node.js.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="alt-bg" id="how-it-works">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">Under the hood</span>
+      <h2>Four Microsoft services, one flow</h2>
+      <p>Ghostget talks only to Microsoft's own hosts, over HTTPS, and never asks for credentials.</p>
+    </div>
+    <div class="flow-diagram">"terminal" ── search ──▶ storeedgefd.dsx.mp.microsoft.com   (the Store app's own search API)
+9N0DX20HK701 ─ details ─▶ displaycatalog.mp.microsoft.com   (price, size, package family)
+              ── GET ───▶ get.microsoft.com/installer/download/9N0DX20HK701
+                          └─ a ~800 KB installer, signed by Microsoft
+verify signature ─▶ launch it ─▶ the Store finishes the install in its own window</div>
+    <p class="text-center" style="color:var(--text-dim)">Full protocol notes, evidence and edge cases are documented in <a href="docs.html#how-it-works" style="color:var(--accent)">How it works →</a></p>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">Ghostget vs. winget's msstore source</span>
+      <h2>Same result, without the sign-in wall</h2>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card bad">
+        <h3>❌ winget --source msstore</h3>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Fails with "no store account found" unless you're signed in</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Signing in on shared/CI machines is often not possible</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> Opaque failures with little explanation</li>
+        </ul>
+      </div>
+      <div class="compare-card good">
+        <h3>✅ ghostget</h3>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Uses the same web installer the <strong>Get</strong> button uses — no account needed</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Works from `npx` on CI runners, fresh VMs, or a Windows box with no profile</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Still verifies Microsoft's own Authenticode signature before running anything</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="alt-bg" id="install">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">Quick start</span>
+      <h2>Three commands to your first install</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h3>Search</h3>
+        <p>Find the app you want on the Microsoft Store.</p>
+        <code>npx ghostget search terminal</code>
+      </div>
+      <div class="step">
+        <h3>Inspect</h3>
+        <p>Check publisher, price, size and package family before installing anything.</p>
+        <code>npx ghostget show 9N0DX20HK701</code>
+      </div>
+      <div class="step">
+        <h3>Install</h3>
+        <p>Download, verify the Microsoft signature, and launch the Store's own installer.</p>
+        <code>npx ghostget install 9N0DX20HK701</code>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:36px">
+      <table>
+        <thead><tr><th>You have</th><th>Run</th></tr></thead>
+        <tbody>
+          <tr><td>Node.js 20+</td><td><code>npx ghostget &lt;command&gt;</code> (or <code>pnpm dlx</code>, <code>yarn dlx</code>, <code>bunx</code>)</td></tr>
+          <tr><td>Node.js, want it permanently</td><td><code>npm install -g ghostget</code>, then <code>ghostget &lt;command&gt;</code></td></tr>
+          <tr><td>Windows, no Node.js</td><td>The dependency-free <a href="docs.html#powershell-edition" style="color:var(--accent)">PowerShell edition</a></td></tr>
+          <tr><td>Your own code</td><td><code>npm install ghostget</code>, then <code>import { installApp } from 'ghostget'</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SAFETY STRIP -->
+<section id="safety">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-kicker">Safety</span>
+      <h2>Nothing runs unless Microsoft signed it</h2>
+    </div>
+    <div class="grid grid-4">
+      <div class="card">
+        <h3 style="margin-top:0;font-size:1rem">🔒 3 hosts, HTTPS only</h3>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin:0">Endpoint overrides must be <code>https</code>, or <code>http</code> on localhost.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;font-size:1rem">✅ Signature required</h3>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin:0">Must report <code>Valid</code> and signer <code>Microsoft Corporation</code>, exactly. One flipped byte fails it.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;font-size:1rem">🚫 No credentials</h3>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin:0">Never asks for or handles logins or payment. Paid apps are refused by default.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;font-size:1rem">🛡️ No elevation</h3>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin:0"><code>doctor</code> prints fix commands, it never runs them. No telemetry, ever.</p>
+      </div>
+    </div>
+    <p class="text-center" style="margin-top:28px"><a class="btn btn-secondary" href="docs.html#safety">Read the full safety model →</a></p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="alt-bg">
+  <div class="container text-center">
+    <h2 style="margin-bottom:12px">Ready to skip the sign-in prompt?</h2>
+    <p style="color:var(--text-dim);max-width:56ch;margin:0 auto 28px">Zero dependencies, MIT licensed, and readable in one sitting. Try it once with <code>--dry-run</code> — nothing is downloaded or launched.</p>
+    <div class="hero-ctas" style="justify-content:center">
+      <a class="btn btn-primary" href="docs.html#getting-started">Read the docs</a>
+      <a class="btn btn-secondary" href="https://github.com/SkyLostTR/ghostget" target="_blank" rel="noopener">Star on GitHub</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index.html" style="margin-bottom:12px">
+          <img class="ghost-logo" src="assets/img/ghost.svg" alt="" width="24" height="24">
+          Ghostget
+        </a>
+        <p>A winget-style CLI and library that installs Microsoft Store apps without signing in. Independent project, not affiliated with or endorsed by Microsoft.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Project</h4>
+        <ul>
+          <li><a href="docs.html">Documentation</a></li>
+          <li><a href="docs.html#commands">Commands</a></li>
+          <li><a href="docs.html#api">Library / API</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/SkyLostTR/ghostget/issues" target="_blank" rel="noopener">Issues</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/security" target="_blank" rel="noopener">Report a vulnerability</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of conduct</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://www.npmjs.com/package/ghostget" target="_blank" rel="noopener">npm package</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/releases" target="_blank" rel="noopener">Releases</a></li>
+          <li><a href="https://github.com/SkyLostTR" target="_blank" rel="noopener">@SkyLostTR on GitHub</a></li>
+          <li><a href="https://github.com/SkyLostTR/ghostget/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-credit">
+        👻 Created and maintained by <a href="https://github.com/SkyLostTR" target="_blank" rel="noopener">SkyLostTR</a> <span class="mono">(@Keeftraum)</span> · © <span data-year>2026</span>
+      </div>
+      <div class="social-links">
+        <a class="icon-btn" href="https://github.com/SkyLostTR" target="_blank" rel="noopener" aria-label="SkyLostTR on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.1 3.29 9.4 7.86 10.93.58.1.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.53-1.33-1.29-1.69-1.29-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14 0 1.54-.01 2.79-.01 3.17 0 .31.21.67.8.56C20.71 21.39 24 17.09 24 12c0-6.35-5.15-11.5-12-11.5Z"/></svg>
+        </a>
+        <a class="icon-btn" href="https://www.npmjs.com/package/ghostget" target="_blank" rel="noopener" aria-label="Ghostget on npm">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 3h24v18H0V3zm13 15v-9H7v9H4V6h16v12h-7z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="back-to-top" data-back-to-top type="button" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

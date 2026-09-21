@@ -13,7 +13,7 @@
     "npx",
     "no-login"
   ],
-  "homepage": "https://github.com/SkyLostTR/ghostget#readme",
+  "homepage": "https://ghostget.kief.fi",
   "bugs": {
     "url": "https://github.com/SkyLostTR/ghostget/issues"
   },
@@ -22,7 +22,13 @@
     "url": "git+https://github.com/SkyLostTR/ghostget.git"
   },
   "license": "MIT",
-  "author": "ghostget contributors",
+  "author": {
+    "name": "SkyLostTR",
+    "url": "https://github.com/SkyLostTR"
+  },
+  "contributors": [
+    "ghostget contributors"
+  ],
   "type": "module",
   "main": "./src/index.js",
   "types": "./types/index.d.ts",
