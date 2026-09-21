@@ -13,6 +13,23 @@ project uses [Semantic Versioning](https://semver.org/).
 - Author and credits sections crediting [SkyLostTR](https://github.com/SkyLostTR) (`@Keeftraum`) across the README,
   `package.json`, `LICENSE` and the website.
 
+## [0.2.0] - 2026-09-21
+
+### Added
+
+- `install` now checks `InstallService`, `ClipSVC` and `AppXSvc` before downloading anything. If any of them is
+  `Disabled`, Windows cannot deploy the package no matter how well the download and launch go, so ghostget stops with
+  a new `E_SERVICE_DISABLED` error (exit code 9) and the exact `Set-Service … -StartupType Manual` fix, instead of
+  downloading, verifying and launching an installer that Windows already can't finish. Skipped for `WPM`-delivered
+  apps (vendor installer, no Appx deployment involved), and bypassed with `--force`, which still warns.
+- `disabledDeploymentServices(services, delivery)`: the pure function behind that check, exported from the library API.
+
+### Fixed
+
+- Previously ghostget only looked at `wuauserv` (a soft dependency) before installing, so a machine with the actual
+  Store deployment services disabled would download, verify and launch the installer anyway and leave the user
+  guessing why the Store window never finished the install.
+
 ## [0.1.0] - 2026-09-21
 
 First release.
@@ -31,4 +48,5 @@ First release.
 - Dependency-free PowerShell edition (`scripts/ghostget.ps1`) for PCs without Node.js.
 - English and Turkish READMEs, and docs on how it works, the API and troubleshooting.
 
+[0.2.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.1.0

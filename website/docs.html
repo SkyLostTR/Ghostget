@@ -26,7 +26,7 @@
     <a class="brand" href="index.html">
       <img class="ghost-logo" src="assets/img/ghost.svg" alt="" width="28" height="28">
       Ghostget
-      <small>v0.1.0</small>
+      <small>v0.2.0</small>
     </a>
     <nav class="main-nav" aria-label="Primary">
       <a href="index.html#features">Features</a>
@@ -251,6 +251,7 @@ ghostget doctor                                      <span style="color:#6b7288"
             <tr><td><span class="pill exit-err mono">6</span></td><td>Needs Windows</td></tr>
             <tr><td><span class="pill exit-err mono">7</span></td><td>Signature check failed, the file was deleted</td></tr>
             <tr><td><span class="pill exit-err mono">8</span></td><td>Paid app (use <code>--force</code> to open the installer anyway)</td></tr>
+            <tr><td><span class="pill exit-err mono">9</span></td><td><code>InstallService</code>, <code>ClipSVC</code> or <code>AppXSvc</code> is Disabled (use <code>--force</code> to launch the installer anyway)</td></tr>
           </tbody>
         </table>
       </div>
@@ -426,6 +427,7 @@ console.log(result.status); <span style="color:#6b7288">// 'installed'</span></c
             <tr><td><code>E_UNSUPPORTED_PLATFORM</code></td><td class="mono">6</td><td>A Windows-only step on another OS</td></tr>
             <tr><td><code>E_SIGNATURE</code></td><td class="mono">7</td><td>Not validly signed by Microsoft</td></tr>
             <tr><td><code>E_PAID</code></td><td class="mono">8</td><td>The app is not free</td></tr>
+            <tr><td><code>E_SERVICE_DISABLED</code></td><td class="mono">9</td><td><code>InstallService</code>, <code>ClipSVC</code> or <code>AppXSvc</code> is Disabled, so Windows cannot deploy the package (<code>details.services</code>)</td></tr>
             <tr><td><code>E_POWERSHELL</code> / <code>E_CANCELLED</code></td><td class="mono">1</td><td>PowerShell failure, or the user cancelled a prompt</td></tr>
           </tbody>
         </table>
@@ -436,9 +438,9 @@ console.log(result.status); <span style="color:#6b7288">// 'installed'</span></c
     <section id="powershell-edition">
       <h2 class="mt-0" style="font-size:1.9rem">PowerShell edition</h2>
       <p>One dependency-free file that does <code>search</code>, <code>show</code>, <code>install</code>, <code>download</code> and <code>url</code>. Runs in Windows PowerShell 5.1 (already on every Windows 10/11) and PowerShell 7.</p>
-      <div class="code-block" data-copy='& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.1.0/scripts/ghostget.ps1))) install 9N0DX20HK701'>
+      <div class="code-block" data-copy='& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.2.0/scripts/ghostget.ps1))) install 9N0DX20HK701'>
         <button class="copy-btn" type="button" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-        <pre><code>& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.1.0/scripts/ghostget.ps1))) install 9N0DX20HK701</code></pre>
+        <pre><code>& ([scriptblock]::Create((irm https://raw.githubusercontent.com/SkyLostTR/ghostget/v0.2.0/scripts/ghostget.ps1))) install 9N0DX20HK701</code></pre>
       </div>
       <p>Pin the URL to a release tag (as above) and, if you like, read the script first: it is one file and every release lists its SHA-256. Options are PowerShell-style: <code>-DryRun</code>, <code>-NoVerify</code>, <code>-Force</code>, <code>-Dir</code>, <code>-Market</code>, <code>-Locale</code>, <code>-Limit</code>.</p>
     </section>
@@ -458,13 +460,14 @@ console.log(result.status); <span style="color:#6b7288">// 'installed'</span></c
             <tr><td class="mono">6</td><td><code>… needs Windows</code></td><td><code>install</code>/<code>list</code>/signature checks only work on Windows. From WSL, run ghostget from Windows PowerShell</td></tr>
             <tr><td class="mono">7</td><td><code>not signed by Microsoft</code></td><td>ghostget deleted the file. Retry; if it persists, something on your network is altering downloads</td></tr>
             <tr><td class="mono">8</td><td><code>is a paid app</code></td><td>Buy it in the Store, or <code>--force</code> to open the installer and decide there</td></tr>
+            <tr><td class="mono">9</td><td><code>Windows cannot deploy Store packages right now</code></td><td><code>InstallService</code>, <code>ClipSVC</code> or <code>AppXSvc</code> is <code>Disabled</code>. The message names which service(s) and the exact <code>Set-Service</code> fix — run it (PowerShell as Administrator) and retry, or pass <code>--force</code> to launch the installer anyway</td></tr>
           </tbody>
         </table>
       </div>
 
       <h3>The Store installer opens but nothing installs</h3>
       <ol>
-        <li>Run <code>ghostget doctor</code>. A <code>fail</code> on <code>InstallService</code>, <code>ClipSVC</code> or <code>AppXSvc</code> means the service is <code>Disabled</code> — set it back to <code>Manual</code>.</li>
+        <li><code>ghostget install</code> now checks <code>InstallService</code>, <code>ClipSVC</code> and <code>AppXSvc</code> itself before downloading anything, and stops with exit code 9 and the exact fix if one is <code>Disabled</code> (unless the app is <code>Delivery: WPM</code>, or you pass <code>--force</code>). If you still land here, run <code>ghostget doctor</code> — a <code>fail</code> on any of those three means the service is <code>Disabled</code>. Set it back to <code>Manual</code> (PowerShell as Administrator): <code>Set-Service -Name InstallService -StartupType Manual</code>.</li>
         <li>If <code>Windows Update (wuauserv)</code> is <code>Disabled</code>, set it to <code>Manual</code>. That does <strong>not</strong> turn automatic updates back on.</li>
         <li>Look at the installer window: it shows the Store's own error code, which you can search for.</li>
       </ol>
@@ -485,7 +488,7 @@ console.log(result.status); <span style="color:#6b7288">// 'installed'</span></c
         <summary class="faq-q">Do I have to turn Windows Update on?
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         </summary>
-        <div class="faq-a">ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure. Setting the service (<code>wuauserv</code>) to <strong>Manual</strong> is the recommended minimum. <code>ghostget doctor</code> flags a bad setup and prints the one-line fix.</div>
+        <div class="faq-a">ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure. Setting the service (<code>wuauserv</code>) to <strong>Manual</strong> is the recommended minimum. Keep <code>InstallService</code>, <code>ClipSVC</code>, <code>AppXSvc</code> and <code>BITS</code> out of <code>Disabled</code> too: <code>install</code> checks the first three itself before downloading anything and stops with exit code 9 and the exact fix if one is off (unless the app uses <code>WPM</code> delivery, or you pass <code>--force</code>). <code>ghostget doctor</code> flags a bad setup and prints the one-line fix.</div>
       </details>
 
       <details class="faq-item">
@@ -543,6 +546,8 @@ node bin/ghostget.js doctor</code></pre>
 
     <section id="changelog">
       <h2 class="mt-0" style="font-size:1.9rem">Changelog</h2>
+      <h3>0.2.0 — 2026-09-21</h3>
+      <p><code>install</code> now checks <code>InstallService</code>, <code>ClipSVC</code> and <code>AppXSvc</code> before downloading anything, and fails fast with <code>E_SERVICE_DISABLED</code> (exit code 9) and the exact fix if one is <code>Disabled</code> — instead of downloading, verifying and launching an installer that Windows already can't finish deploying.</p>
       <h3>0.1.0 — 2026-09-21</h3>
       <p>First release: <code>search</code>, <code>show</code>, <code>install</code>, <code>download</code>, <code>url</code>, <code>list</code> and <code>doctor</code> commands; Authenticode verification before anything runs; the dependency-free PowerShell edition; English and Turkish docs.</p>
       <p>Full history: <a href="https://github.com/SkyLostTR/ghostget/blob/main/CHANGELOG.md" target="_blank" rel="noopener" style="color:var(--accent)">CHANGELOG.md</a> · <a href="https://github.com/SkyLostTR/ghostget/releases" target="_blank" rel="noopener" style="color:var(--accent)">GitHub Releases</a></p>
