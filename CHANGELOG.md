@@ -5,6 +5,8 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-22
+
 ### Added
 
 - `install` no longer just warns when a needed Store deployment service (`InstallService`, `ClipSVC`, `AppXSvc`,
@@ -95,6 +97,7 @@ First release.
 - Dependency-free PowerShell edition (`scripts/ghostget.ps1`) for PCs without Node.js.
 - English and Turkish READMEs, and docs on how it works, the API and troubleshooting.
 
+[0.4.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.4.0
 [0.3.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.3.0
 [0.2.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.1.0

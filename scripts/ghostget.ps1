@@ -42,7 +42,7 @@ param(
     [string]$Cid = 'website_cta_psi'
 )
 
-$script:Version = '0.3.0'
+$script:Version = '0.4.0'
 $script:Endpoints = @{
     Installer      = if ($env:GHOSTGET_INSTALLER_URL) { $env:GHOSTGET_INSTALLER_URL.TrimEnd('/') } else { 'https://get.microsoft.com/installer/download' }
     DisplayCatalog = if ($env:GHOSTGET_DISPLAY_CATALOG_URL) { $env:GHOSTGET_DISPLAY_CATALOG_URL.TrimEnd('/') } else { 'https://displaycatalog.mp.microsoft.com/v7.0' }
