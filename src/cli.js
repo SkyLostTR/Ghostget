@@ -26,6 +26,7 @@ const OPTIONS = /** @type {const} */ ({
   'dry-run': { type: 'boolean' },
   'no-verify': { type: 'boolean' },
   force: { type: 'boolean', short: 'f' },
+  'no-elevate': { type: 'boolean' },
   wait: { type: 'boolean' },
   timeout: { type: 'string' },
   dir: { type: 'string', short: 'd' },
@@ -65,7 +66,7 @@ const COMMANDS = {
     aliases: ['i', 'add'],
     usage: 'install <app>',
     summary: 'Download, verify and launch the Store installer',
-    options: ['dry-run', 'no-verify', 'force', 'wait', 'timeout', 'dir', 'cid', 'exact', 'json', 'market', 'locale'],
+    options: ['dry-run', 'no-verify', 'force', 'no-elevate', 'wait', 'timeout', 'dir', 'cid', 'exact', 'json', 'market', 'locale'],
     run: installCommand,
   },
   download: {
@@ -129,6 +130,7 @@ Options
       --wait           install: wait until the app shows up as installed (Store packages)
       --timeout <min>  install: how long --wait may take (default 10)
   -f, --force          install: proceed for paid apps, already-installed apps, and disabled Store services
+      --no-elevate     install: don't ask Windows for permission (UAC) to fix a Disabled Store service
       --no-verify      skip the Microsoft signature check (not recommended)
   -d, --dir <path>     where to keep the downloaded installer
       --market <CC>    Store market, e.g. US or TR (default: from your system)

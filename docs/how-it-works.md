@@ -92,10 +92,12 @@ fulfillment plugin a `WindowsUpdate`-delivered download uses — proven live, wi
 as far as "Downloading" and then fails with a COM `E_NOINTERFACE` error, even with `InstallService`/`ClipSVC`/`AppXSvc`
 and `wuauserv` itself all fine. From outside, that looks identical to the Store window just hanging. `install` checks
 all five before it downloads anything (skipped for `WPM`, since that path never touches Windows Update or Appx
-deployment at all) and stops with `E_SERVICE_DISABLED` (exit code 9) and the exact `Set-Service … -StartupType Manual`
-fix if one is `Disabled`. `--force` downloads and launches the installer anyway, on the chance the app finishes some
-other way. There is no way around this one short of enabling the service: unlike the `Stopped`-but-`Manual` case
-below, `Disabled` needs a persistent `-StartupType` change, which needs admin rights ghostget never asks for.
+deployment at all). Unlike the `Stopped`-but-`Manual` case below, `Disabled` needs a persistent `-StartupType` change,
+and Windows requires admin rights for that no matter who asks (proven live: denied even for the same user account,
+non-elevated) — so `install` asks for them, once, the normal Windows way. See **Elevation**, below. If that is turned
+off (`--no-elevate`) or fails, `install` falls back to stopping with `E_SERVICE_DISABLED` (exit code 9) and the exact
+`Set-Service … -StartupType Manual` fix. `--force` downloads and launches the installer anyway, on the chance the app
+finishes some other way.
 
 `Set-Service -StartupType Manual` only makes a service *startable*; it does not start it. Windows is supposed to start
 a `Manual` service itself the moment something asks for it, but right after flipping it back on from `Disabled` that
@@ -113,14 +115,42 @@ short-lived detached background watcher that waits for the app to show up instal
 `install` tries `Stop-Service` on anything it started, best effort. Without admin rights that stop silently does
 nothing — the service is simply left `Running` until Windows stops it on its own, which is not a persistent change:
 `StartType` is never touched, so this is not something `doctor` would ever flag as a problem, and nothing is different
-about the machine after Windows eventually stops it than before `install` ran. `Disabled` services are a different,
-stricter case (see above): fixing those needs `-StartupType`, which `install` does not attempt itself.
+about the machine after Windows eventually stops it than before `install` ran. `Disabled` services are the stricter
+case that does need `-StartupType`; see **Elevation** below for how `install` handles that one too.
+
+## Elevation
+
+`install` prefers never to need admin rights, and most of what it does never does — but a `Disabled` deployment
+service (above) genuinely cannot be fixed without them; that is Windows' own rule, not a choice ghostget makes, and
+it holds even for the account that owns the machine. Rather than stop and tell the person to go open an elevated
+PowerShell themselves, `install` asks Windows for permission itself: the normal UAC consent prompt (Yes/No) —
+the one interaction Windows requires, and the only one. It is not something ghostget can silently skip; anything that
+claimed to would either be lying or bypassing a security boundary, and ghostget does neither.
+
+What happens inside that elevated moment is narrow and everything is put back:
+
+1. Only the specific services this install actually needs (from `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc`,
+   `DoSvc`) that are actually `Disabled` are touched. Nothing else — not `wuauserv`, not any other setting, not
+   anything the person configured on purpose.
+2. Each one's current `StartType` is recorded first, then it is set to `Manual` and started.
+3. Still elevated, still running as a single background process, it waits (bounded, `--timeout`) for the app to show
+   up installed, then puts every service it touched back to exactly the `StartType` it found — `Disabled` again —
+   and stops it. This runs to completion even after the `ghostget` CLI process itself has exited.
+4. If the prompt is denied, or nothing answers it (no interactive desktop, common in CI or a script run non-interactively),
+   `install` falls back to the plain `E_SERVICE_DISABLED` error with the manual fix instead of hanging.
+
+Pass `--no-elevate` to skip asking entirely and go straight to that fallback — for scripts and CI, where nobody is
+there to answer a prompt, or for anyone who would simply rather run the `Set-Service` command themselves.
 
 ## What ghostget deliberately does not do
 
 - Sign in, handle credentials, or handle payment.
-- Elevate, or change a persistent Windows setting (`Set-Service -StartupType …`; `doctor` prints the fix but never runs
-  it). `install` *does* start a Store deployment service that is enabled but not running, and tries to stop it again
-  afterward — see above — because that is the app's own on-demand running state, not a setting.
+- Change anything permanently, or touch anything beyond the exact deployment services this one install needs.
+  `install` *does* start a stopped service and, when nothing less will do, ask for elevation to fix a `Disabled`
+  one (see **Elevation** above) — but only those specific services, and every one of them is put back exactly as
+  found (including `StartType`) once the install finishes or times out. `wuauserv` itself, and everything else about
+  the machine, is never touched.
+- Elevate silently or by surprise. The UAC prompt is real and visible every time; `--no-elevate` skips asking
+  altogether, and denying it just falls back to the plain manual-fix error.
 - Pick between apps for you.
 - Bypass purchases, licences or DRM. The web installer only offers what Microsoft offers any visitor.

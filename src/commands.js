@@ -169,6 +169,7 @@ export async function installCommand(ctx) {
       dryRun: values['dry-run'],
       noVerify: values['no-verify'],
       force: values.force,
+      noElevate: values['no-elevate'],
       wait: values.wait,
       waitTimeoutMs: timeoutMinutes * 60_000,
       exact: values.exact,
@@ -188,6 +189,14 @@ export async function installCommand(ctx) {
             break;
           case 'service-started':
             ui.ok(`Started ${event.name} (Windows had stopped it)`);
+            break;
+          case 'elevating':
+            ui.spinner.stop();
+            ui.step(`${event.services.join(', ')} ${event.services.length > 1 ? 'are' : 'is'} Disabled — asking Windows for permission to fix that (a Yes/No prompt should appear)`);
+            break;
+          case 'elevated':
+            ui.ok(`Windows granted permission; fixed ${event.services.join(', ')} for this install`);
+            ui.spinner.start('Checking this PC');
             break;
           case 'download-start':
             ui.spinner.stop();

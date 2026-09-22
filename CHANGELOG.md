@@ -5,6 +5,44 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `install` no longer stops at `E_SERVICE_DISABLED` when it can fix the problem: for a `Disabled` deployment service
+  (`InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc`, `DoSvc`), it now asks Windows for permission itself (the normal
+  UAC consent prompt) instead of telling the person to open an elevated PowerShell and run `Set-Service`. Proven
+  live: re-enabling a `Disabled` service needs admin rights no matter who asks, so there is no way around the
+  prompt itself, but everything after it is automatic and every service touched is put back to exactly the state
+  it was found in (including `StartType`) once the app shows up installed or a bounded timeout passes — all inside
+  that one elevated, detached process, so there is only ever one prompt. `wuauserv` and everything else about the
+  machine is never touched. New `elevateAndFixDisabledServices(opts)` and `psQuote(value)` (exported for the
+  Powershell-injection-safety test suite) in `src/windows.js`. New `--no-elevate` flag (and `noElevate` library
+  option) skips this and falls back straight to the old manual-fix error, for scripts, CI, or anyone who'd rather
+  run the command themselves.
+- Tested live against a machine with `UsoSvc` genuinely `Disabled`: the UAC prompt appears, approving it fixes and
+  later restores the service exactly as documented. Also found live, on the same machine, that `DoSvc` specifically
+  can refuse `Set-Service` with access denied *even from a fully elevated (High integrity, Administrators) process*
+  — `InstallService`/`ClipSVC`/`AppXSvc`/`UsoSvc` all took the same fix without issue. Neither the service's own
+  security descriptor (`sc sdshow`) nor its registry key's ACL explain it; something else about this specific
+  Windows install is protecting it beyond what elevation grants access to. `install` does not attempt anything
+  more invasive (such as editing the registry `Start` value directly) to work around this — it reports the failure
+  honestly instead, same as a denied prompt.
+
+### Fixed
+
+- `elevateAndFixDisabledServices` always reported "timed out waiting for the elevated helper to report back", even
+  when the elevated process had already written its result within a second or two and the person answered the UAC
+  prompt immediately. Cause: the elevated script writes that result with `Set-Content -Encoding UTF8`, and Windows
+  PowerShell 5.1's `-Encoding UTF8` always prepends a BOM (unlike PowerShell 7's `utf8NoBOM`) — the Node side never
+  stripped it before `JSON.parse`, so every read silently failed and looked identical to the file not existing yet,
+  no matter how long the poll waited. Found live: a person confirmed clicking the UAC prompt "the moment it
+  appeared" and it still reported a timeout. Fixed by stripping a leading BOM before parsing (`src/windows.js`
+  already did this for `runPowerShell`'s own stdout; this path was missed), and by distinguishing "file does not
+  exist yet" from "file exists but could not be parsed" instead of retrying both the same way. Also widened the
+  poll window from 20 s to 90 s regardless, since a person still needs a realistic amount of time to notice an
+  unexpected consent prompt and respond to it — this was a real, separate issue even before the BOM bug was found.
+  New regression test in `test/windows.test.js` that writes a file with `Set-Content -Encoding UTF8` and asserts
+  `JSON.parse` fails on the raw read and succeeds once the BOM is stripped.
+
 ## [0.4.0] - 2026-09-22
 
 ### Added

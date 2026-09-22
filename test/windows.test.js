@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { GhostgetError, verifyInstaller } from '../src/index.js';
 import { assertTrustedInstaller } from '../src/installer.js';
-import { assertWindows, cleanEnvForPS51, cleanPowerShellError, getServices, scheduleServiceRestore, setServiceRunning } from '../src/windows.js';
+import { assertWindows, cleanEnvForPS51, cleanPowerShellError, getServices, psQuote, runPowerShell, scheduleServiceRestore, setServiceRunning } from '../src/windows.js';
 import { fakeExe } from './support/mock-store.js';
 
 const win = process.platform === 'win32';
@@ -26,6 +26,40 @@ test('cleanEnvForPS51 drops PSModulePath regardless of case, keeps everything el
   assert.deepEqual(cleanEnvForPS51({ PSMODULEPATH: 'C:\\bad', PSModulePath: 'C:\\also-bad' }), {});
   assert.deepEqual(cleanEnvForPS51({ Path: 'C:\\x' }), { Path: 'C:\\x' }, 'a clean env is returned unchanged');
 });
+
+test('psQuote produces a safe PowerShell single-quoted literal', () => {
+  assert.equal(psQuote('plain'), "'plain'");
+  assert.equal(psQuote("it's"), "'it''s'");
+  assert.equal(psQuote("''"), "''''''");
+  assert.equal(psQuote(''), "''");
+});
+
+test('psQuote round-trips adversarial strings through the real PowerShell parser', { skip: !win }, async () => {
+  const hostile = [`it's`, `"quoted"`, '$env:PATH', '`backtick`', 'a; Remove-Item C:\\', 'a\nb', "''; exit 1; '"];
+  for (const value of hostile) {
+    const script = `Write-Output ${psQuote(value)}`;
+    const out = (await runPowerShell(script)).replace(/\r?\n$/, '');
+    assert.equal(out, value, `psQuote(${JSON.stringify(value)}) round-tripped through PowerShell`);
+  }
+});
+
+test(
+  'Set-Content -Encoding UTF8 writes a BOM that must be stripped before JSON.parse (regression: this silently broke elevateAndFixDisabledServices as an always-times-out bug, not a real timeout)',
+  { skip: !win },
+  async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'ghostget-bom-'));
+    const file = path.join(dir, 'result.json');
+    try {
+      await runPowerShell(`[pscustomobject]@{ ok = $true } | ConvertTo-Json -Compress | Set-Content -LiteralPath ${psQuote(file)} -Encoding UTF8`);
+      const raw = await readFile(file, 'utf8');
+      assert.equal(raw.charCodeAt(0), 0xfeff, 'Windows PowerShell 5.1 -Encoding UTF8 is expected to prepend a BOM');
+      assert.throws(() => JSON.parse(raw), 'a BOM in front of JSON makes JSON.parse throw, which is exactly the bug');
+      assert.deepEqual(JSON.parse(raw.replace(/^﻿/, '')), { ok: true }, 'stripping it first parses cleanly');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  },
+);
 
 test('off Windows, Windows-only steps explain themselves', { skip: win }, () => {
   assert.throws(

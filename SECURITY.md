@@ -21,6 +21,9 @@ Only the latest release receives fixes.
 - Anything that lets a downloaded file run **without** a valid Microsoft signature, or that weakens the signature rule.
 - Path traversal or overwriting files through a server-supplied file name.
 - Command injection into PowerShell through user input, search results or server responses.
+- Anything that makes the elevated helper (`install`, when a Store deployment service is `Disabled`) do more than
+  `Set-Service`/`Start-Service`/`Stop-Service` on exactly the services it names, or that stops it from restoring a
+  service's original `StartType` afterward.
 - Sending data anywhere other than the Microsoft hosts listed in the README.
 - Leaking credentials. (ghostget is designed never to handle any; if it does, that is a bug.)
 
@@ -35,5 +38,14 @@ Only the latest release receives fixes.
 
 - Only `https` endpoints are accepted (plain `http` only for localhost).
 - The installer must have an Authenticode status of `Valid` and a signer organisation of exactly `Microsoft Corporation`, or it is deleted and never started.
-- PowerShell runs from its absolute path with fixed scripts; data reaches it through environment variables.
-- ghostget never elevates and never changes system settings.
+- PowerShell runs from its absolute path with fixed scripts; data reaches it through environment variables, except
+  for the elevated helper below, which embeds its (fixed-name, never user-supplied) service names and (network-
+  sourced, so treated as untrusted) package family names as escaped single-quoted PowerShell literals instead,
+  because environment variables are not guaranteed to cross the elevation boundary. Both are covered by an
+  automated test that round-trips adversarial strings through the real PowerShell parser.
+- ghostget elevates for exactly one narrow, disclosed reason: a Store deployment service that is `Disabled` needs
+  admin rights to re-enable, full stop, for anyone. `install` asks once (the standard Windows UAC prompt — never
+  silent, never skippable by ghostget itself), fixes only the specific service(s) that install needs, and restores
+  each one to exactly the `StartType` it found it in once the install finishes or times out. `--no-elevate` disables
+  asking entirely. No other elevation happens, and no setting outside a service's own temporary running state and
+  `StartType` is ever changed — `wuauserv` in particular is never touched.

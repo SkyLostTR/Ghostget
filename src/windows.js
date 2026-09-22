@@ -1,8 +1,10 @@
 // @ts-check
 import { spawn } from 'node:child_process';
+import { rm, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { EXIT, GhostgetError } from './errors.js';
+import { sleep } from './util.js';
 
 /**
  * Everything that talks to Windows goes through this file, using Windows PowerShell 5.1
@@ -20,6 +22,17 @@ import { EXIT, GhostgetError } from './errors.js';
  * Proven live against windows-latest: deleting PSModulePath from the child's environment
  * fixes it, because 5.1 computes a correct default when the variable is absent. See
  * {@link cleanEnvForPS51}.
+ *
+ * `install` prefers never to need admin rights, and most of it never does. But a service that is
+ * `Disabled` (as opposed to `Manual`-but-stopped, see {@link scheduleServiceRestore}) can only be
+ * re-enabled with a persistent `-StartupType` change, and Windows requires elevation for that no
+ * matter who is asking (proven live). Rather than leave the person to run PowerShell themselves,
+ * {@link elevateAndFixDisabledServices} asks Windows for permission once (the standard UAC consent
+ * prompt -- the one interaction Windows itself requires, not something ghostget can silently skip),
+ * fixes exactly the services the install needs and nothing else, and restores each one to exactly
+ * the state it found it in (including flipping `-StartupType` back to `Disabled`) once the app shows
+ * up installed or a bounded timeout passes -- all inside that same elevated, detached process, so
+ * there is only ever one prompt, not two.
  */
 
 export const isWindows = () => process.platform === 'win32';
@@ -238,6 +251,131 @@ export function scheduleServiceRestore({ services, pfns = [], timeoutMs = 10 * 6
   } catch {
     // best effort: if this couldn't even be spawned, the service just stays Running
   }
+}
+
+/**
+ * A single-quoted PowerShell string literal for `value`. The only special case in a single-quoted
+ * PS string is a literal `'`, escaped by doubling it -- this is the full rule, not a subset, so this
+ * is safe for arbitrary text (service names are always from ghostget's own fixed list, never user
+ * input, but package family names came from a network response, so this is treated as untrusted).
+ * @param {string} value
+ */
+export function psQuote(value) {
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+/**
+ * The script an elevated child process runs: fix the named services (Disabled -> Manual, then
+ * Start-Service), report success or failure to `resultFile` immediately, then -- still elevated,
+ * still running -- wait for the app to show up installed (or time out) and put every service back
+ * exactly as found, including StartType. Every value is embedded as a quoted PS literal at build
+ * time rather than read from the environment, because environment variables set on the launcher are
+ * not guaranteed to reach a process created across the elevation boundary the same way.
+ * @param {{ services: string[], pfns: string[], timeoutS: number, resultFile: string }} opts
+ */
+function buildElevatedFixScript({ services, pfns, timeoutS, resultFile }) {
+  return `
+$ErrorActionPreference = 'Stop'
+$services = @(${services.map(psQuote).join(', ')})
+$pfns = @(${pfns.map(psQuote).join(', ')})
+$resultFile = ${psQuote(resultFile)}
+$originals = @{}
+try {
+  foreach ($n in $services) {
+    $svc = Get-Service -Name $n -ErrorAction Stop
+    $originals[$n] = [string]$svc.StartType
+    if ($svc.StartType -eq 'Disabled') { Set-Service -Name $n -StartupType Manual -ErrorAction Stop }
+    Start-Service -Name $n -ErrorAction SilentlyContinue
+  }
+  [pscustomobject]@{ ok = $true } | ConvertTo-Json -Compress | Set-Content -LiteralPath $resultFile -Encoding UTF8
+} catch {
+  [pscustomobject]@{ ok = $false; message = [string]$_.Exception.Message } | ConvertTo-Json -Compress | Set-Content -LiteralPath $resultFile -Encoding UTF8
+  exit 1
+}
+$deadline = (Get-Date).AddSeconds(${Math.max(1, Math.round(timeoutS))})
+while ((Get-Date) -lt $deadline) {
+  if ($pfns.Count -gt 0) {
+    $found = @(Get-AppxPackage | Where-Object { $pfns -contains $_.PackageFamilyName })
+    if ($found.Count -gt 0) { break }
+  }
+  Start-Sleep -Seconds 5
+}
+foreach ($n in $services) {
+  Stop-Service -Name $n -ErrorAction SilentlyContinue
+  if ($originals[$n] -eq 'Disabled') { Set-Service -Name $n -StartupType Disabled -ErrorAction SilentlyContinue }
+}
+`;
+}
+
+const LAUNCH_ELEVATED_SCRIPT = `
+try {
+  Start-Process -FilePath $env:GHOSTGET_PS_EXE -ArgumentList $env:GHOSTGET_ARGS -Verb RunAs -WindowStyle Hidden -ErrorAction Stop
+  'ok'
+} catch {
+  "denied: $($_.Exception.Message)"
+}
+`;
+
+/**
+ * Ask Windows (one UAC prompt) to temporarily fix `Disabled` deployment services and restore them
+ * afterward -- see the module-level comment. Never throws: a denied prompt, no interactive desktop
+ * to show one on, or anything else comes back as `{ ok: false, message }` so the caller can fall
+ * back to the plain "run this yourself" error.
+ * @param {{ services: string[], pfns?: string[], timeoutMs?: number, env?: NodeJS.ProcessEnv }} opts
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export async function elevateAndFixDisabledServices({ services, pfns = [], timeoutMs = 10 * 60_000, env = process.env }) {
+  if (!isWindows() || !services.length) return { ok: false, message: 'nothing to fix' };
+  const resultFile = path.join(os.tmpdir(), `ghostget-elevate-${process.pid}-${Date.now().toString(36)}.json`);
+  const innerEncoded = Buffer.from(
+    PRELUDE + buildElevatedFixScript({ services, pfns, timeoutS: timeoutMs / 1000, resultFile }),
+    'utf16le',
+  ).toString('base64');
+  const psExe = powershellExe(env);
+
+  /** @type {string} */
+  let launched;
+  try {
+    launched = (
+      await runPowerShell(LAUNCH_ELEVATED_SCRIPT, {
+        env: {
+          GHOSTGET_PS_EXE: psExe,
+          GHOSTGET_ARGS: `-NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand ${innerEncoded}`,
+        },
+        // generous: this blocks on the UAC prompt itself, and a person may take a while to respond
+        timeoutMs: 120_000,
+      })
+    ).trim();
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err) };
+  }
+  if (launched !== 'ok') return { ok: false, message: launched.replace(/^denied:\s*/, '') };
+
+  // Proven live: Start-Process -Verb RunAs (without -Wait) returns as soon as it has *requested*
+  // elevation, not once a person has actually answered the UAC prompt -- so this poll, not the
+  // runPowerShell call above, is what has to give a human a realistic amount of time to notice an
+  // unexpected consent dialog and respond to it.
+  const deadline = Date.now() + 90_000;
+  while (Date.now() < deadline) {
+    /** @type {string} */
+    let text;
+    try {
+      text = await readFile(resultFile, 'utf8');
+    } catch {
+      // the elevated process hasn't written it yet -- normal, keep polling
+      await sleep(500);
+      continue;
+    }
+    await rm(resultFile, { force: true });
+    try {
+      // Set-Content -Encoding UTF8 in Windows PowerShell 5.1 always writes a BOM (unlike PS7's utf8NoBOM).
+      const parsed = JSON.parse(text.replace(/^﻿/, ''));
+      return parsed.ok ? { ok: true } : { ok: false, message: parsed.message };
+    } catch (err) {
+      return { ok: false, message: `the elevated helper's result was unreadable: ${err instanceof Error ? err.message : String(err)}` };
+    }
+  }
+  return { ok: false, message: 'timed out waiting for the elevated helper to report back' };
 }
 
 /** @typedef {{ name: string, version: string, packageFamilyName: string, publisher: string }} InstalledPackage */

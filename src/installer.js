@@ -13,7 +13,16 @@ import { EXIT, GhostgetError, usageError } from './errors.js';
 import { httpError, networkError } from './http.js';
 import { resolveProduct } from './resolve.js';
 import { sleep } from './util.js';
-import { assertWindows, getAuthenticode, getInstalledPackages, getServices, scheduleServiceRestore, setServiceRunning, startProcess } from './windows.js';
+import {
+  assertWindows,
+  elevateAndFixDisabledServices,
+  getAuthenticode,
+  getInstalledPackages,
+  getServices,
+  scheduleServiceRestore,
+  setServiceRunning,
+  startProcess,
+} from './windows.js';
 
 /**
  * @typedef {object} UrlOptions
@@ -303,6 +312,9 @@ export function stalledDeploymentServices(services, delivery) {
  * @property {boolean} [dryRun] Resolve and report, but download and run nothing.
  * @property {boolean} [noVerify] Skip the signature check (not recommended).
  * @property {boolean} [force] Proceed even if the app is paid, already installed, or a Store deployment service is Disabled.
+ * @property {boolean} [noElevate] Don't ask Windows for permission (a UAC prompt) to fix a `Disabled` deployment
+ *   service; fall back straight to the `E_SERVICE_DISABLED` error (or the warning, with `force`) instead. For
+ *   scripts and CI, where nobody is there to answer a prompt.
  * @property {boolean} [wait] After launching, wait until the app shows up as installed (Appx/MSIX apps only).
  * @property {number} [waitTimeoutMs] How long `wait` may take. Default 10 minutes.
  * @property {boolean} [exact] Require an exact name match when searching.
@@ -315,6 +327,8 @@ export function stalledDeploymentServices(services, delivery) {
  * @typedef {{ type: 'resolved', id: string, name: string, product: import('./catalog.js').Product|null }
  *   | { type: 'warning', message: string }
  *   | { type: 'service-started', name: string }
+ *   | { type: 'elevating', services: string[] }
+ *   | { type: 'elevated', services: string[] }
  *   | { type: 'download-start', url: string }
  *   | { type: 'progress', received: number, total: number|null }
  *   | { type: 'downloaded', file: Downloaded }
@@ -390,15 +404,33 @@ export async function installApp(target, opts = {}) {
     const are = disabled.length > 1 ? 'are' : 'is';
     const message = `Windows cannot deploy Store packages right now: ${disabled.join(', ')} ${are} Disabled. Downloading and launching the installer will not be enough to finish installing ${name}.`;
     const fix = `${disabled.map((n) => `Set-Service -Name ${n} -StartupType Manual`).join('; ')}   # PowerShell as Administrator`;
-    if (!opts.force) {
+    if (!opts.noElevate) {
+      emit({ type: 'elevating', services: disabled });
+      const elevated = await elevateAndFixDisabledServices({ services: disabled, pfns, timeoutMs: opts.waitTimeoutMs ?? 10 * 60_000, env: opts.env });
+      if (elevated.ok) {
+        emit({ type: 'elevated', services: disabled });
+      } else if (!opts.force) {
+        throw new GhostgetError(message, {
+          code: 'E_SERVICE_DISABLED',
+          exitCode: EXIT.SERVICE,
+          hint: `Asking Windows for permission didn't work (${elevated.message}). ${fix}. Then retry, or pass --force to launch the installer anyway.`,
+          details: { services: disabled },
+        });
+      } else {
+        emit({ type: 'warning', message: `${message} Asking Windows for permission didn't work (${elevated.message}). ${fix}` });
+      }
+    } else if (!opts.force) {
       throw new GhostgetError(message, {
         code: 'E_SERVICE_DISABLED',
         exitCode: EXIT.SERVICE,
         hint: `${fix}. Then retry, or pass --force to launch the installer anyway.`,
         details: { services: disabled },
       });
+    } else {
+      emit({ type: 'warning', message: `${message} ${fix}` });
     }
-    emit({ type: 'warning', message: `${message} ${fix}` });
+    // Elevation, when it worked, already fixes, watches and restores these services end to end
+    // (inside that one elevated process) -- nothing further to do for them here.
   }
 
   const stalled = stalledDeploymentServices(services, delivery).filter((n) => !disabled.includes(n));
