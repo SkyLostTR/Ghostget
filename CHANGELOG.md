@@ -5,6 +5,8 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-22
+
 ### Added
 
 - Documentation website at [ghostget.kief.fi](https://ghostget.kief.fi) (`website/`), deployed to GitHub Pages via
@@ -12,6 +14,17 @@ project uses [Semantic Versioning](https://semver.org/).
   started, commands, configuration, the library API, the safety model, and troubleshooting.
 - Author and credits sections crediting [SkyLostTR](https://github.com/SkyLostTR) (`@Keeftraum`) across the README,
   `package.json`, `LICENSE` and the website.
+- `stalledDeploymentServices(services, delivery)`: like `disabledDeploymentServices`, but for `InstallService`,
+  `ClipSVC` or `AppXSvc` that is enabled (`Manual`/`Automatic`) yet not actually `Running`. `install` now warns with
+  the exact `Start-Service` fix when this happens, and `doctor` reports it as a warning instead of `ok`.
+
+### Fixed
+
+- A Store deployment service that had just been switched from `Disabled` back to `Manual` (the fix `doctor` itself
+  suggests) does not always get started by Windows in time for the next install: the Store then falls back to opening
+  its own app window for the person to finish by hand instead of deploying the package silently, which looked
+  identical to `install` doing nothing. `doctor` used to report such a service as `ok` because it only checked
+  `StartType`, not `Status`. It now flags it and names the `Start-Service` command that starts it immediately.
 
 ## [0.2.0] - 2026-09-21
 
@@ -48,5 +61,6 @@ First release.
 - Dependency-free PowerShell edition (`scripts/ghostget.ps1`) for PCs without Node.js.
 - English and Turkish READMEs, and docs on how it works, the API and troubleshooting.
 
+[0.3.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.3.0
 [0.2.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.2.0
 [0.1.0]: https://github.com/SkyLostTR/ghostget/releases/tag/v0.1.0

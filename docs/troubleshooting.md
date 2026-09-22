@@ -21,9 +21,10 @@ the three Microsoft hosts are reachable, and prints the exact command for each f
 ## The Store installer opens but nothing installs
 
 1. `ghostget install` now checks `InstallService`, `ClipSVC` and `AppXSvc` itself before it downloads anything, and stops with exit code 9 and the exact fix if one is `Disabled` (unless the app is `Delivery: WPM`, or you pass `--force`). If you still land here, run `ghostget doctor` — a `fail` on any of those three means the service is `Disabled`. Set it back to `Manual` (PowerShell as Administrator): `Set-Service -Name InstallService -StartupType Manual`.
-2. If `Windows Update (wuauserv)` is `Disabled`, set it to `Manual`. That lets the Store start it on demand and does **not** turn automatic updates back on. Apps the Store delivers through Windows Update (`Delivery: WindowsUpdate` in `ghostget show`) may stall while it is `Disabled`. Apps that show `Delivery: WPM` use the vendor's own installer and do not depend on it.
-3. Look at the installer window: it shows the Store's own error code, which you can search for.
-4. Some apps also need a signed-in Microsoft account (age-rated content, subscriptions, entitlements) — see [below](#the-app-asks-me-to-sign-in). No service fix will get past that; it's Microsoft's own rule for those apps.
+2. Setting a service to `Manual` only lets Windows start it when something needs it — it does not start it right away, and the very next install can still hit this if nothing has triggered it yet. `doctor` reports this case as a warning (`Manual, Stopped`, not `Disabled`) and `install` prints the same warning instead of blocking. Start it immediately instead of waiting on the trigger (PowerShell as Administrator): `Start-Service -Name ClipSVC` (also try `InstallService` and `AppXSvc` if they show the same warning), then retry the install.
+3. If `Windows Update (wuauserv)` is `Disabled`, set it to `Manual`. That lets the Store start it on demand and does **not** turn automatic updates back on. Apps the Store delivers through Windows Update (`Delivery: WindowsUpdate` in `ghostget show`) may stall while it is `Disabled`. Apps that show `Delivery: WPM` use the vendor's own installer and do not depend on it.
+4. Look at the installer window: it shows the Store's own error code, which you can search for.
+5. Some apps also need a signed-in Microsoft account (age-rated content, subscriptions, entitlements) — see [below](#the-app-asks-me-to-sign-in). No service fix will get past that; it's Microsoft's own rule for those apps.
 
 ## The app asks me to sign in
 

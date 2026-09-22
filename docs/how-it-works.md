@@ -91,6 +91,15 @@ three of them before it downloads anything (skipped for `WPM`, since that path n
 with `E_SERVICE_DISABLED` (exit code 9) and the exact `Set-Service … -StartupType Manual` fix if one is `Disabled`.
 `--force` downloads and launches the installer anyway, on the chance the app finishes some other way.
 
+`Set-Service -StartupType Manual` only makes a service *startable*; it does not start it. Windows is supposed to start
+a `Manual` service itself the moment something asks for it, but right after flipping it back on from `Disabled` that
+trigger does not always fire before the next install runs — `ClipSVC` and `AppXSvc` in particular are commonly still
+`Stopped` at that point. When that happens the downloaded installer still launches and still verifies fine, but the
+Store falls back to opening its own app window for a person to finish by hand instead of deploying the package
+silently, which looks identical to `install` having done nothing. `install` and `doctor` both check `Status`, not just
+`StartType`, and print `Start-Service -Name …` (which does start it immediately) for any needed service that is enabled
+but not yet `Running`.
+
 ## What ghostget deliberately does not do
 
 - Sign in, handle credentials, or handle payment.

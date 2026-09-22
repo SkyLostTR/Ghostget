@@ -5,7 +5,7 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, beforeEach, test } from 'node:test';
-import { GhostgetError, buildInstallerUrl, disabledDeploymentServices, downloadInstaller, isTrustedMicrosoftSignature } from '../src/index.js';
+import { GhostgetError, buildInstallerUrl, disabledDeploymentServices, downloadInstaller, isTrustedMicrosoftSignature, stalledDeploymentServices } from '../src/index.js';
 import { parseContentDisposition, safeFileName } from '../src/installer.js';
 import { REAL_DISPOSITION, fakeExe, startMockStore } from './support/mock-store.js';
 
@@ -90,6 +90,36 @@ test('a Disabled Store deployment service is reported, unless the app is WPM', (
   assert.deepEqual(disabledDeploymentServices(allDisabled, 'WindowsUpdate'), ['InstallService', 'ClipSVC', 'AppXSvc']);
 
   assert.deepEqual(disabledDeploymentServices([], 'WindowsUpdate'), [], 'a service ghostget could not read is not assumed Disabled');
+});
+
+test('a Manual-but-not-Running Store deployment service is reported as stalled, unless the app is WPM', () => {
+  const allRunning = [
+    { name: 'InstallService', status: 'Running', startType: 'Manual' },
+    { name: 'ClipSVC', status: 'Running', startType: 'Manual' },
+    { name: 'AppXSvc', status: 'Running', startType: 'Automatic' },
+  ];
+  assert.deepEqual(stalledDeploymentServices(allRunning, 'WindowsUpdate'), []);
+
+  const oneStopped = [
+    { name: 'InstallService', status: 'Running', startType: 'Manual' },
+    { name: 'ClipSVC', status: 'Stopped', startType: 'Manual' },
+    { name: 'AppXSvc', status: 'Running', startType: 'Automatic' },
+  ];
+  assert.deepEqual(stalledDeploymentServices(oneStopped, 'WindowsUpdate'), ['ClipSVC']);
+  assert.deepEqual(stalledDeploymentServices(oneStopped, 'WPM'), [], 'WPM apps use the vendor installer, not Appx deployment');
+
+  const stoppedAndDisabled = [
+    { name: 'InstallService', status: 'Stopped', startType: 'Disabled' },
+    { name: 'ClipSVC', status: 'Stopped', startType: 'Manual' },
+    { name: 'AppXSvc', status: 'Running', startType: 'Automatic' },
+  ];
+  assert.deepEqual(
+    stalledDeploymentServices(stoppedAndDisabled, 'WindowsUpdate'),
+    ['ClipSVC'],
+    'a Disabled service is disabledDeploymentServices territory, not stalledDeploymentServices',
+  );
+
+  assert.deepEqual(stalledDeploymentServices([], 'WindowsUpdate'), [], 'a service ghostget could not read is not assumed stalled');
 });
 
 // --- downloads against the mock server -------------------------------------------------------

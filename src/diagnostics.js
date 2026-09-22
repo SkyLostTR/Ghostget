@@ -113,7 +113,15 @@ export async function runDiagnostics(opts = {}) {
           continue;
         }
         const detail = `${info.startType}, ${info.status}`;
-        if (info.startType !== 'Disabled') {
+        if (info.startType !== 'Disabled' && svc.needed && info.status !== 'Running') {
+          checks.push({
+            id,
+            label,
+            status: 'warn',
+            detail: `${detail}. Not running yet; Windows usually starts it on demand, but if an install stalls with the Store window open, start it yourself.`,
+            fix: `Start-Service -Name ${svc.name}   # run PowerShell as Administrator`,
+          });
+        } else if (info.startType !== 'Disabled') {
           checks.push({
             id,
             label,

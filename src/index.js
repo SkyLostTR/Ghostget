@@ -19,6 +19,7 @@ export {
   installApp,
   isTrustedMicrosoftSignature,
   launchInstaller,
+  stalledDeploymentServices,
   verifyInstaller,
 } from './installer.js';
 export { runDiagnostics } from './diagnostics.js';
