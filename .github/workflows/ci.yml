@@ -29,13 +29,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - name: TEMP diagnose Windows PowerShell module loading (as pwsh child)
-        if: runner.os == 'Windows'
-        run: node scripts/_ci_diag.mjs
-      - name: TEMP diagnose Windows PowerShell module loading (as powershell.exe child)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: node scripts/_ci_diag.mjs
       - run: npm test
 
   package:

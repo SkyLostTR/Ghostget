@@ -6,7 +6,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { GhostgetError, verifyInstaller } from '../src/index.js';
 import { assertTrustedInstaller } from '../src/installer.js';
-import { assertWindows, cleanPowerShellError, getServices } from '../src/windows.js';
+import { assertWindows, cleanEnvForPS51, cleanPowerShellError, getServices } from '../src/windows.js';
 import { fakeExe } from './support/mock-store.js';
 
 const win = process.platform === 'win32';
@@ -19,6 +19,12 @@ test('extracts readable text from PowerShell CLIXML errors', () => {
   assert.equal(cleanPowerShellError(clixml), 'Get-Foo : File C:\\x was not found.');
   assert.equal(cleanPowerShellError('  plain text  '), 'plain text');
   assert.equal(cleanPowerShellError('#< CLIXML\r\n<Objs><S S="Error">a &lt; b &amp; c</S></Objs>'), 'a < b & c');
+});
+
+test('cleanEnvForPS51 drops PSModulePath regardless of case, keeps everything else', () => {
+  assert.deepEqual(cleanEnvForPS51({ Path: 'C:\\x', PSModulePath: 'C:\\bad' }), { Path: 'C:\\x' });
+  assert.deepEqual(cleanEnvForPS51({ PSMODULEPATH: 'C:\\bad', PSModulePath: 'C:\\also-bad' }), {});
+  assert.deepEqual(cleanEnvForPS51({ Path: 'C:\\x' }), { Path: 'C:\\x' }, 'a clean env is returned unchanged');
 });
 
 test('off Windows, Windows-only steps explain themselves', { skip: win }, () => {

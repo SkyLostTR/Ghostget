@@ -10,11 +10,16 @@ import { EXIT, GhostgetError } from './errors.js';
  * data travels in environment variables, so no user-controlled text is ever spliced into
  * PowerShell source.
  *
- * -ExecutionPolicy Bypass is for this one process only, not a machine-wide change: on a
- * machine whose policy is Restricted (still the Windows default), 5.1 can fail to load its
- * own built-in modules with "was found in the module '…', but the module could not be
- * loaded" for cmdlets as core as Get-AuthenticodeSignature, which breaks every signature
- * check ghostget does. Seen on GitHub's windows-latest runners.
+ * -ExecutionPolicy Bypass is for this one process only, not a machine-wide change.
+ *
+ * When 5.1 is launched from PowerShell 7 (pwsh) -- GitHub Actions' own default shell on
+ * windows-latest -- the child inherits pwsh's $env:PSModulePath, which is prefixed with
+ * PowerShell 7's own module folders. 5.1 can then fail to auto-load even its own built-in
+ * modules ("was found in the module '…', but the module could not be loaded", for cmdlets
+ * as core as Get-AuthenticodeSignature), breaking every signature check ghostget does.
+ * Proven live against windows-latest: deleting PSModulePath from the child's environment
+ * fixes it, because 5.1 computes a correct default when the variable is absent. See
+ * {@link cleanEnvForPS51}.
  */
 
 export const isWindows = () => process.platform === 'win32';
@@ -41,6 +46,22 @@ export function assertWindows(what) {
 export function powershellExe(env = process.env) {
   const root = env.SystemRoot || env.windir || 'C:\\Windows';
   return path.win32.join(root, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+}
+
+/**
+ * A copy of `env` with `PSModulePath` removed (case-insensitively: Windows env vars are not
+ * case-sensitive, but JS object keys are). Windows PowerShell 5.1 computes a correct default
+ * for itself when the variable is absent; a wrong one inherited from a different PowerShell
+ * (see the module-level comment above) can otherwise break its own built-in modules.
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {NodeJS.ProcessEnv}
+ */
+export function cleanEnvForPS51(env) {
+  const out = { ...env };
+  for (const key of Object.keys(out)) {
+    if (/^psmodulepath$/i.test(key)) delete out[key];
+  }
+  return out;
 }
 
 const PRELUDE =
@@ -78,7 +99,7 @@ export function runPowerShell(script, { env = {}, timeoutMs = 60_000, signal } =
   return new Promise((resolve, reject) => {
     const encoded = Buffer.from(PRELUDE + script, 'utf16le').toString('base64');
     const child = spawn(powershellExe(), ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-OutputFormat', 'Text', '-EncodedCommand', encoded], {
-      env: { ...process.env, ...env },
+      env: cleanEnvForPS51({ ...process.env, ...env }),
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       signal,

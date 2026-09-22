@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { cleanEnvForPS51 } from '../src/windows.js';
 import { startMockStore } from './support/mock-store.js';
 
 const scriptPath = fileURLToPath(new URL('../scripts/ghostget.ps1', import.meta.url));
@@ -16,9 +17,10 @@ const win = process.platform === 'win32';
 /** Async on purpose: the mock server lives in this process and must keep answering. */
 function powershell(args, env = {}) {
   return new Promise((resolve) => {
-    // -ExecutionPolicy Bypass: some CI runners default to Restricted, which can also block Windows
-    // PowerShell's own built-in modules (see src/windows.js). Affects only this process.
-    const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args], { env: { ...process.env, ...env } });
+    // -ExecutionPolicy Bypass, cleanEnvForPS51: see the module-level comment in src/windows.js.
+    const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args], {
+      env: cleanEnvForPS51({ ...process.env, ...env }),
+    });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (d) => (stdout += d));

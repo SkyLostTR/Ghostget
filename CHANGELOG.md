@@ -7,13 +7,18 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Every Windows PowerShell child process ghostget spawns (`src/windows.js`, and the `scripts/ghostget.ps1` edition's
-  own tests) now runs with `-ExecutionPolicy Bypass` for that one process. On a machine whose effective policy is
-  `Restricted` — still the out-of-the-box Windows default, and what GitHub's `windows-latest` CI runners use — Windows
-  PowerShell 5.1 can fail to auto-load its own built-in modules, including `Microsoft.PowerShell.Security`
-  (`Get-AuthenticodeSignature`) and `Microsoft.PowerShell.Utility` (`Get-FileHash`), with `"…, but the module could
-  not be loaded"`. That broke every signature check, which is why CI had been failing on Windows since the first
-  commit. This does not change the machine's execution policy; it only affects the one process ghostget starts.
+- Windows PowerShell 5.1, launched as a child of PowerShell 7 (`pwsh`) — GitHub Actions' own default shell on
+  `windows-latest`, and how every `npm test` step ran — inherits pwsh's `$env:PSModulePath`, which is prefixed with
+  PowerShell 7's own module folders. 5.1 then fails to auto-load even its own built-in modules, including
+  `Microsoft.PowerShell.Security` (`Get-AuthenticodeSignature`) and `Microsoft.PowerShell.Utility` (`Get-FileHash`),
+  with `"…, but the module could not be loaded"`. That broke every signature check, which is why CI had been failing
+  on Windows since the first commit. Confirmed live against `windows-latest` by reproducing it, then fixing it, with
+  the exact same child process. Every `powershell.exe` ghostget spawns (`src/windows.js`, and the
+  `scripts/ghostget.ps1` edition's tests) now runs with a cleaned environment (new `cleanEnvForPS51`, exported from
+  `src/windows.js`) that drops any inherited `PSModulePath`, so 5.1 computes its own correct default instead.
+- Every Windows PowerShell child process ghostget spawns also now runs with `-ExecutionPolicy Bypass` for that one
+  process, so a machine whose policy is `Restricted` (still the Windows default) can't block it either. This does not
+  change the machine's execution policy.
 
 ## [0.3.0] - 2026-09-22
 
