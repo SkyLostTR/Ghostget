@@ -1,6 +1,6 @@
 {
   "name": "ghostget",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "winget-style CLI and library that installs Microsoft Store apps without signing in. No Microsoft account, no winget msstore source.",
   "keywords": [
     "winget",
