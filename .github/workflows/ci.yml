@@ -31,28 +31,7 @@ jobs:
       - run: npm run typecheck
       - name: TEMP diagnose Windows PowerShell module loading
         if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          $PSVersionTable | Out-String | Write-Host
-          Write-Host "PSModulePath: $env:PSModulePath"
-          Write-Host "PSHOME: $PSHOME"
-          Get-Module -ListAvailable Microsoft.PowerShell.Security, Microsoft.PowerShell.Utility | Format-List * | Out-String | Write-Host
-          try {
-            Import-Module Microsoft.PowerShell.Security -ErrorAction Stop -Verbose
-            Write-Host "IMPORT OK"
-          } catch {
-            Write-Host "IMPORT FAILED"
-            $_ | Format-List * -Force | Out-String | Write-Host
-            $_.Exception | Format-List * -Force | Out-String | Write-Host
-            $ie = $_.Exception.InnerException
-            $n = 0
-            while ($ie -and $n -lt 5) {
-              Write-Host "--- inner exception $n ---"
-              $ie | Format-List * -Force | Out-String | Write-Host
-              $ie = $ie.InnerException
-              $n++
-            }
-          }
+        run: node scripts/_ci_diag.mjs
       - run: npm test
 
   package:
