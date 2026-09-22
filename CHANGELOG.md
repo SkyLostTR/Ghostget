@@ -5,6 +5,16 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Every Windows PowerShell child process ghostget spawns (`src/windows.js`, and the `scripts/ghostget.ps1` edition's
+  own tests) now runs with `-ExecutionPolicy Bypass` for that one process. On a machine whose effective policy is
+  `Restricted` — still the out-of-the-box Windows default, and what GitHub's `windows-latest` CI runners use — Windows
+  PowerShell 5.1 can fail to auto-load its own built-in modules, including `Microsoft.PowerShell.Security`
+  (`Get-AuthenticodeSignature`) and `Microsoft.PowerShell.Utility` (`Get-FileHash`), with `"…, but the module could
+  not be loaded"`. That broke every signature check, which is why CI had been failing on Windows since the first
+  commit. This does not change the machine's execution policy; it only affects the one process ghostget starts.
+
 ## [0.3.0] - 2026-09-22
 
 ### Added

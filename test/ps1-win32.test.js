@@ -12,7 +12,9 @@ const win = process.platform === 'win32';
 
 function powershell(args, env = {}) {
   return new Promise((resolve) => {
-    const child = spawn('powershell.exe', ['-NoProfile', '-File', scriptPath, ...args], { env: { ...process.env, ...env } });
+    // -ExecutionPolicy Bypass: some CI runners default to Restricted, which can also block Windows
+    // PowerShell's own built-in modules (see src/windows.js). Affects only this process.
+    const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args], { env: { ...process.env, ...env } });
     let stdout = '';
     child.stdout.on('data', (d) => (stdout += d));
     child.on('close', (status) => resolve({ status, stdout: stdout.trim() }));

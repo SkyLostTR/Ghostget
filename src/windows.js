@@ -9,6 +9,12 @@ import { EXIT, GhostgetError } from './errors.js';
  * (present on every supported Windows). Scripts are passed with -EncodedCommand and all
  * data travels in environment variables, so no user-controlled text is ever spliced into
  * PowerShell source.
+ *
+ * -ExecutionPolicy Bypass is for this one process only, not a machine-wide change: on a
+ * machine whose policy is Restricted (still the Windows default), 5.1 can fail to load its
+ * own built-in modules with "was found in the module '…', but the module could not be
+ * loaded" for cmdlets as core as Get-AuthenticodeSignature, which breaks every signature
+ * check ghostget does. Seen on GitHub's windows-latest runners.
  */
 
 export const isWindows = () => process.platform === 'win32';
@@ -71,7 +77,7 @@ export function runPowerShell(script, { env = {}, timeoutMs = 60_000, signal } =
   assertWindows('This step');
   return new Promise((resolve, reject) => {
     const encoded = Buffer.from(PRELUDE + script, 'utf16le').toString('base64');
-    const child = spawn(powershellExe(), ['-NoProfile', '-NonInteractive', '-OutputFormat', 'Text', '-EncodedCommand', encoded], {
+    const child = spawn(powershellExe(), ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-OutputFormat', 'Text', '-EncodedCommand', encoded], {
       env: { ...process.env, ...env },
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
