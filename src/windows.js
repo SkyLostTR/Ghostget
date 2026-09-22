@@ -161,6 +161,85 @@ export async function getServices(names) {
   return Array.isArray(rows) ? rows : [];
 }
 
+const START_OR_STOP_SERVICE_SCRIPT = `
+try {
+  if ($env:GHOSTGET_ACTION -eq 'start') { Start-Service -Name $env:GHOSTGET_SERVICE -ErrorAction Stop }
+  else { Stop-Service -Name $env:GHOSTGET_SERVICE -ErrorAction Stop }
+  'ok'
+} catch {
+  [string]$_.Exception.Message
+}
+`;
+
+/**
+ * Best effort: start (or stop) a service by name. Never throws -- a permission problem, a missing
+ * service, anything at all comes back as `{ ok: false, message }` instead of rejecting, because
+ * callers treat this as "try, and fall back gracefully" rather than a hard requirement.
+ * @param {string} name
+ * @param {'start'|'stop'} action
+ * @returns {Promise<{ ok: boolean, message?: string }>}
+ */
+export async function setServiceRunning(name, action) {
+  try {
+    const out = (await runPowerShell(START_OR_STOP_SERVICE_SCRIPT, { env: { GHOSTGET_SERVICE: name, GHOSTGET_ACTION: action } })).trim();
+    return out === 'ok' ? { ok: true } : { ok: false, message: out };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+const RESTORE_SERVICES_SCRIPT = `
+$deadline = (Get-Date).AddSeconds([int]$env:GHOSTGET_TIMEOUT_S)
+$pfns = @($env:GHOSTGET_PFNS -split ',' | Where-Object { $_ })
+$services = @($env:GHOSTGET_SERVICES -split ',' | Where-Object { $_ })
+while ((Get-Date) -lt $deadline) {
+  if ($pfns.Count -gt 0) {
+    $found = @(Get-AppxPackage | Where-Object { $pfns -contains $_.PackageFamilyName })
+    if ($found.Count -gt 0) { break }
+  }
+  Start-Sleep -Seconds 5
+}
+foreach ($s in $services) {
+  Stop-Service -Name $s -ErrorAction SilentlyContinue
+}
+`;
+
+/**
+ * Fire-and-forget: wait (bounded) for a Store package to show up installed, or just wait out the
+ * timeout when there is nothing to watch for, then try to put back-to-Stopped any service ghostget
+ * itself started for the install. Windows lets a standard user start these services but not stop
+ * them again (proven live: Start-Service succeeds, Stop-Service fails with access denied), so this
+ * is best effort -- run without admin rights it silently does nothing on the stop, and the service
+ * simply stays Running (not a persistent setting: StartType is untouched, and Windows itself stops
+ * an idle on-demand service eventually). Detached so the caller's own process can exit immediately;
+ * never throws, never resolves anything the caller needs to await.
+ * @param {{ services: string[], pfns?: string[], timeoutMs?: number, env?: NodeJS.ProcessEnv }} opts
+ */
+export function scheduleServiceRestore({ services, pfns = [], timeoutMs = 10 * 60_000, env = process.env }) {
+  if (!isWindows() || !services.length) return;
+  const encoded = Buffer.from(PRELUDE + RESTORE_SERVICES_SCRIPT, 'utf16le').toString('base64');
+  try {
+    const child = spawn(
+      powershellExe(env),
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-EncodedCommand', encoded],
+      {
+        env: cleanEnvForPS51({
+          ...env,
+          GHOSTGET_SERVICES: services.join(','),
+          GHOSTGET_PFNS: pfns.join(','),
+          GHOSTGET_TIMEOUT_S: String(Math.max(1, Math.round(timeoutMs / 1000))),
+        }),
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true,
+      },
+    );
+    child.unref();
+  } catch {
+    // best effort: if this couldn't even be spawned, the service just stays Running
+  }
+}
+
 /** @typedef {{ name: string, version: string, packageFamilyName: string, publisher: string }} InstalledPackage */
 
 const PACKAGES_SCRIPT = `

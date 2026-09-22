@@ -83,13 +83,19 @@ The Store reports how an app is delivered (`Installer.Type`):
 
 This is also why `ghostget doctor` looks at the Windows Update service. It is not something ghostget calls, but Store
 packages are delivered through that infrastructure. Setting the service to **Manual** is the recommended minimum; whether
-an install works with it **Disabled** depends on the app and has not been verified.
+an install works with it **Disabled** depends on the app — see below, now verified for `WindowsUpdate` delivery.
 
-Unlike `wuauserv`, `InstallService`, `ClipSVC` and `AppXSvc` are not optional for anything other than `WPM`: without them
-the launched installer cannot hand a package to Windows at all, no matter how the app is delivered. `install` checks the
-three of them before it downloads anything (skipped for `WPM`, since that path never touches Appx deployment) and stops
-with `E_SERVICE_DISABLED` (exit code 9) and the exact `Set-Service … -StartupType Manual` fix if one is `Disabled`.
-`--force` downloads and launches the installer anyway, on the chance the app finishes some other way.
+Unlike `wuauserv` itself, `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc` and `DoSvc` are not optional for anything
+other than `WPM`: without them the launched installer cannot hand a package to Windows at all, no matter how the app
+is delivered. `UsoSvc` (Update Orchestrator Service) and `DoSvc` (Delivery Optimization) run the actual "WU"
+fulfillment plugin a `WindowsUpdate`-delivered download uses — proven live, with both `Disabled`: the Store app gets
+as far as "Downloading" and then fails with a COM `E_NOINTERFACE` error, even with `InstallService`/`ClipSVC`/`AppXSvc`
+and `wuauserv` itself all fine. From outside, that looks identical to the Store window just hanging. `install` checks
+all five before it downloads anything (skipped for `WPM`, since that path never touches Windows Update or Appx
+deployment at all) and stops with `E_SERVICE_DISABLED` (exit code 9) and the exact `Set-Service … -StartupType Manual`
+fix if one is `Disabled`. `--force` downloads and launches the installer anyway, on the chance the app finishes some
+other way. There is no way around this one short of enabling the service: unlike the `Stopped`-but-`Manual` case
+below, `Disabled` needs a persistent `-StartupType` change, which needs admin rights ghostget never asks for.
 
 `Set-Service -StartupType Manual` only makes a service *startable*; it does not start it. Windows is supposed to start
 a `Manual` service itself the moment something asks for it, but right after flipping it back on from `Disabled` that
@@ -97,12 +103,24 @@ trigger does not always fire before the next install runs — `ClipSVC` and `App
 `Stopped` at that point. When that happens the downloaded installer still launches and still verifies fine, but the
 Store falls back to opening its own app window for a person to finish by hand instead of deploying the package
 silently, which looks identical to `install` having done nothing. `install` and `doctor` both check `Status`, not just
-`StartType`, and print `Start-Service -Name …` (which does start it immediately) for any needed service that is enabled
-but not yet `Running`.
+`StartType`.
+
+**`install` fixes this itself, without a manual step.** For any needed service that is enabled but not `Running`, it
+calls `Start-Service` before downloading anything — proven live that this needs no elevation: Windows lets a standard
+user start these services (they are meant to be triggered by ordinary Store usage), even though it does *not* let a
+standard user stop them again. After the install (right after the `--wait` loop if `--wait` was given, otherwise a
+short-lived detached background watcher that waits for the app to show up installed or a bounded timeout, then exits)
+`install` tries `Stop-Service` on anything it started, best effort. Without admin rights that stop silently does
+nothing — the service is simply left `Running` until Windows stops it on its own, which is not a persistent change:
+`StartType` is never touched, so this is not something `doctor` would ever flag as a problem, and nothing is different
+about the machine after Windows eventually stops it than before `install` ran. `Disabled` services are a different,
+stricter case (see above): fixing those needs `-StartupType`, which `install` does not attempt itself.
 
 ## What ghostget deliberately does not do
 
 - Sign in, handle credentials, or handle payment.
-- Elevate, or change any Windows setting (`doctor` prints fix commands but never runs them).
+- Elevate, or change a persistent Windows setting (`Set-Service -StartupType …`; `doctor` prints the fix but never runs
+  it). `install` *does* start a Store deployment service that is enabled but not running, and tries to stop it again
+  afterward — see above — because that is the app's own on-demand running state, not a setting.
 - Pick between apps for you.
 - Bypass purchases, licences or DRM. The web installer only offers what Microsoft offers any visitor.

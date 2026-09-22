@@ -188,12 +188,15 @@ ESM, tipli (JSDoc'tan üretilen `.d.ts`), bağımlılık yok. Tüm fonksiyonlar 
 | 6 | Windows gerekir |
 | 7 | İmza denetimi başarısız, dosya silindi |
 | 8 | Ücretli uygulama (yine de açmak için `--force`) |
-| 9 | `InstallService`, `ClipSVC` veya `AppXSvc` Disabled (yine de kurulum programını başlatmak için `--force`) |
+| 9 | `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc` veya `DoSvc` Disabled (yine de kurulum programını başlatmak için `--force`) |
 
 ## SSS
 
 **Windows Update'i açmam gerekiyor mu?**
-ghostget Windows Update istemcisini hiç çağırmaz ve hesap istemez. Ama Store birçok uygulamayı Windows Update altyapısı üzerinden dağıtır (`ghostget show` bunlar için `Delivery: WindowsUpdate` yazar; satıcının kendi kurulum programını kullananlar `WPM` gösterir). Windows Update servisini (`wuauserv`) **Manual** yapmak önerilen asgari ayardır: gerektiğinde başlayabilir ve otomatik güncellemeleri geri açmaz. Servis **Disabled** iken bir uygulamanın kurulup kurulmayacağı, Store'un onu nasıl dağıttığına bağlıdır ve doğrulanmamıştır. `ghostget doctor` bu durumu işaretler ve tek satırlık çözümü yazdırır. `InstallService`, `ClipSVC`, `AppXSvc` ve `BITS` servislerini `Disabled` yapma: `install` artık indirmeden önce ilk üçünü kendisi denetliyor; biri kapalıysa (uygulama `WPM` ile dağıtılmadıkça, ya da `--force` verilmedikçe) 9 çıkış koduyla ve tam `Set-Service` komutuyla durur.
+ghostget Windows Update istemcisini hiç çağırmaz ve hesap istemez. Ama Store birçok uygulamayı Windows Update altyapısı üzerinden dağıtır (`ghostget show` bunlar için `Delivery: WindowsUpdate` yazar; satıcının kendi kurulum programını kullananlar `WPM` gösterir), ve bu altyapı yalnızca `wuauserv`'den ibaret değil: asıl indirmeyi `UsoSvc` (Update Orchestrator Service) ile `DoSvc` (Delivery Optimization) yürütüyor. Canlı ortamda kanıtlandı: `UsoSvc`/`DoSvc` **Disabled** iken `WindowsUpdate` ile dağıtılan bir kurulum Store'da "Downloading" aşamasına kadar geliyor ve sonra bir COM hatasıyla düşüyor — dışarıdan bakınca Store penceresinin sadece takılı kalmasından ayırt edilemiyor; `wuauserv`'in kendisi sağlıklı olsa bile fark etmiyor. `install` artık indirmeden önce `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc` ve `DoSvc`'yi kendisi denetliyor; biri `Disabled` ise (uygulama `WPM` ile dağıtılmadıkça — bu yol Windows Update'e hiç dokunmaz — ya da `--force` verilmedikçe) 9 çıkış koduyla ve tam `Set-Service` komutuyla durur. `wuauserv`'in kendisini **Manual** yapmak, özellikle onun için önerilen asgari ayardır: gerektiğinde başlayabilir ve otomatik güncellemeleri geri açmaz.
+
+**Bir servis etkin ama "henüz çalışmıyor" diyor — bunu elle mi düzeltmem gerekiyor?**
+Hayır. `Manual`, Windows'un o servisi yalnızca istendiğinde başlatabileceği anlamına gelir; kendiliğinden başlatmaz, ve bu tetikleyici bir sonraki kurulumda her zaman zamanında ateşlenmez (özellikle `ClipSVC`). `install` indirmeden önce servisi kendisi başlatıyor — canlı ortamda kanıtlandı: bunun için yönetici hakkı gerekmiyor, çünkü olağan Store kullanımı da onu zaten böyle tetikliyor — ve kurulumdan sonra geri durdurmayı deniyor. O son kısım yönetici hakkı istiyor, ghostget bunu asla istemez; hak yoksa servis sadece `Running` kalır, ta ki Windows onu kendiliğinden durdurana kadar — bu kalıcı bir değişiklik değildir.
 
 **Kurulum penceresi yine de giriş istiyor.**
 Bazı uygulamalar (yaş sınırlı içerik, abonelikler, hak sahipliği) hesap ister; bu Microsoft'un kuralıdır, ghostget'in aşması gereken/aşabileceği bir şey değildir.

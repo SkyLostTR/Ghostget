@@ -186,12 +186,15 @@ ESM, typed (JSDoc-generated `.d.ts`), no dependencies. Every function is documen
 | 6 | Needs Windows |
 | 7 | Signature check failed, the file was deleted |
 | 8 | Paid app (use `--force` to open the installer anyway) |
-| 9 | `InstallService`, `ClipSVC` or `AppXSvc` is Disabled (use `--force` to launch the installer anyway) |
+| 9 | `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc` or `DoSvc` is Disabled (use `--force` to launch the installer anyway) |
 
 ## FAQ
 
 **Do I have to turn Windows Update on?**
-ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure (`ghostget show` prints `Delivery: WindowsUpdate` for those; apps that use a vendor's own installer show `WPM`). Setting the Windows Update service (`wuauserv`) to **Manual** is the recommended minimum: it can start on demand and does not turn automatic updates back on. Whether an app installs while the service is **Disabled** depends on how the Store delivers it and has not been verified. `ghostget doctor` flags that setup and prints the one-line fix. Keep `InstallService`, `ClipSVC`, `AppXSvc` and `BITS` out of `Disabled`: `install` now checks the first three itself before downloading anything and stops with exit code 9 and the exact `Set-Service` fix if one of them is off (unless the app uses `WPM` delivery, or you pass `--force`).
+ghostget never calls the Windows Update client and never needs an account. But the Store delivers many apps through Windows Update infrastructure (`ghostget show` prints `Delivery: WindowsUpdate` for those; apps that use a vendor's own installer show `WPM`), and that infrastructure needs more than `wuauserv` itself: `UsoSvc` (Update Orchestrator Service) and `DoSvc` (Delivery Optimization) run the actual download. Proven live: with `UsoSvc`/`DoSvc` **Disabled**, a `WindowsUpdate`-delivered install gets as far as "Downloading" in the Store and then fails with a COM error, indistinguishable from the outside from the Store window just hanging — `wuauserv` itself being fine does not help. `install` now checks `InstallService`, `ClipSVC`, `AppXSvc`, `UsoSvc` and `DoSvc` itself before downloading anything, and stops with exit code 9 and the exact `Set-Service` fix if one is `Disabled` (unless the app uses `WPM` delivery, which never touches any of this, or you pass `--force`). Setting `wuauserv` itself to **Manual** is the recommended minimum for it specifically: it can start on demand and does not turn automatic updates back on.
+
+**A service is enabled but says "not running yet" — do I have to fix that myself?**
+No. `Manual` only means Windows *can* start a service when asked; it does not start it automatically, and the trigger does not always fire in time for the next install (`ClipSVC` in particular). `install` starts it itself before downloading — proven live to need no admin rights, since that is exactly how ordinary Store usage triggers it — and tries to stop it again afterward. That last part needs admin rights, which ghostget never asks for; without them the service is simply left `Running` until Windows stops it on its own, which is not a persistent change.
 
 **The installer window still asks me to sign in.**
 Some apps (age-rated content, subscriptions, entitlements) need an account, and that is Microsoft's rule, not something ghostget can or should get around.

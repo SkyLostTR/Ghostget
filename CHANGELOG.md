@@ -5,6 +5,25 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `install` no longer just warns when a needed Store deployment service (`InstallService`, `ClipSVC`, `AppXSvc`,
+  `UsoSvc`, `DoSvc`) is enabled but not running yet — it starts the service itself before downloading anything,
+  proven live to need no admin rights (Windows lets a standard user start these; that is how ordinary Store usage
+  triggers them). `install` then tries to put the service back to `Stopped` afterward (best effort: Windows does
+  *not* let a standard user stop it again, proven live too, so without admin rights it is simply left `Running` —
+  not a persistent change; `StartType` is never touched). New `setServiceRunning(name, action)` and
+  `scheduleServiceRestore(opts)` in `src/windows.js`.
+- `install` and `doctor` now also check `UsoSvc` (Update Orchestrator Service) and `DoSvc` (Delivery Optimization),
+  which run the actual "WU" fulfillment plugin a `WindowsUpdate`-delivered download uses. Found live, on a machine
+  with both `Disabled`: `InstallService`/`ClipSVC`/`AppXSvc`/`wuauserv` were all fine, `install` downloaded, verified
+  and launched the installer normally, and the Store app then got as far as "Downloading" before failing with a COM
+  `E_NOINTERFACE` error — indistinguishable from the outside from the Store window just hanging, confirmed by
+  reading `Microsoft-Windows-Store/Operational` in Windows' own event log. `WPM`-delivered apps never touch this and
+  are unaffected. Unlike the `Stopped`-but-enabled case above, a `Disabled` `UsoSvc`/`DoSvc` still blocks with
+  `E_SERVICE_DISABLED` (exit 9): fixing `Disabled` needs a persistent `-StartupType` change, which needs admin
+  rights ghostget never asks for.
+
 ### Fixed
 
 - Windows PowerShell 5.1, launched as a child of PowerShell 7 (`pwsh`) — GitHub Actions' own default shell on

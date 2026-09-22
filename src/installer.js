@@ -13,7 +13,7 @@ import { EXIT, GhostgetError, usageError } from './errors.js';
 import { httpError, networkError } from './http.js';
 import { resolveProduct } from './resolve.js';
 import { sleep } from './util.js';
-import { assertWindows, getAuthenticode, getInstalledPackages, getServices, startProcess } from './windows.js';
+import { assertWindows, getAuthenticode, getInstalledPackages, getServices, scheduleServiceRestore, setServiceRunning, startProcess } from './windows.js';
 
 /**
  * @typedef {object} UrlOptions
@@ -259,9 +259,14 @@ async function cleanupStale(root, maxAgeMs = 24 * 60 * 60 * 1000) {
 
 /**
  * Services the Store package deployment path needs, whatever it delivers through. Distinct from
- * `wuauserv`, which only some apps need (see the warning below).
+ * `wuauserv` itself, which only some apps need (see the warning below): `UsoSvc` (Update
+ * Orchestrator Service) and `DoSvc` (Delivery Optimization) are what actually run the "WU"
+ * fulfillment plugin a `WindowsUpdate`-delivered app's download uses. Proven live: with both
+ * Disabled, the Store app gets as far as "Downloading" and then fails with a COM E_NOINTERFACE
+ * error, even though `InstallService`/`ClipSVC`/`AppXSvc`/`wuauserv` were all fine -- indistinguishable
+ * from the outside from the Store window just hanging.
  */
-const DEPLOYMENT_SERVICES = ['InstallService', 'ClipSVC', 'AppXSvc'];
+const DEPLOYMENT_SERVICES = ['InstallService', 'ClipSVC', 'AppXSvc', 'UsoSvc', 'DoSvc'];
 
 /**
  * Which of {@link DEPLOYMENT_SERVICES} are Disabled, for the given delivery type. Pure function:
@@ -309,6 +314,7 @@ export function stalledDeploymentServices(services, delivery) {
 /**
  * @typedef {{ type: 'resolved', id: string, name: string, product: import('./catalog.js').Product|null }
  *   | { type: 'warning', message: string }
+ *   | { type: 'service-started', name: string }
  *   | { type: 'download-start', url: string }
  *   | { type: 'progress', received: number, total: number|null }
  *   | { type: 'downloaded', file: Downloaded }
@@ -396,13 +402,19 @@ export async function installApp(target, opts = {}) {
   }
 
   const stalled = stalledDeploymentServices(services, delivery).filter((n) => !disabled.includes(n));
-  if (stalled.length) {
-    const are = stalled.length > 1 ? 'are' : 'is';
-    const fix = `${stalled.map((n) => `Start-Service -Name ${n}`).join('; ')}   # PowerShell as Administrator`;
-    emit({
-      type: 'warning',
-      message: `${stalled.join(', ')} ${are} enabled but not running yet. Windows usually starts it on demand, but if the Store window opens without finishing the install, run: ${fix}`,
-    });
+  /** Services ghostget itself started, so it knows what to try putting back afterward. */
+  const startedByUs = [];
+  for (const svcName of stalled) {
+    const started = await setServiceRunning(svcName, 'start');
+    if (started.ok) {
+      startedByUs.push(svcName);
+      emit({ type: 'service-started', name: svcName });
+    } else {
+      emit({
+        type: 'warning',
+        message: `${svcName} is enabled but not running, and ghostget could not start it itself (${started.message}). If the Store window opens without finishing the install, run: Start-Service -Name ${svcName}   # PowerShell as Administrator`,
+      });
+    }
   }
 
   const updateService = services.find((s) => s.name === 'wuauserv');
@@ -445,12 +457,19 @@ export async function installApp(target, opts = {}) {
   if (opts.wait && pfns.length) {
     emit({ type: 'waiting', pfns });
     const deadline = Date.now() + (opts.waitTimeoutMs ?? 10 * 60_000);
+    /** @type {import('./windows.js').InstalledPackage[]|null} */
+    let found = null;
     while (Date.now() < deadline) {
       await sleep(4000, opts.signal);
-      const found = await getInstalledPackages({ pfns });
-      if (found.length) return { status: 'installed', installedVersion: found[0].version, ...result };
+      found = await getInstalledPackages({ pfns });
+      if (found.length) break;
     }
+    if (startedByUs.length) await Promise.all(startedByUs.map((n) => setServiceRunning(n, 'stop')));
+    if (found?.length) return { status: 'installed', installedVersion: found[0].version, ...result };
     return { status: 'wait-timeout', ...result };
+  }
+  if (startedByUs.length) {
+    scheduleServiceRestore({ services: startedByUs, pfns, timeoutMs: opts.waitTimeoutMs ?? 10 * 60_000, env: opts.env });
   }
   return { status: 'launched', ...result };
 }

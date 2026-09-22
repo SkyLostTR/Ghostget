@@ -6,7 +6,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { GhostgetError, verifyInstaller } from '../src/index.js';
 import { assertTrustedInstaller } from '../src/installer.js';
-import { assertWindows, cleanEnvForPS51, cleanPowerShellError, getServices } from '../src/windows.js';
+import { assertWindows, cleanEnvForPS51, cleanPowerShellError, getServices, scheduleServiceRestore, setServiceRunning } from '../src/windows.js';
 import { fakeExe } from './support/mock-store.js';
 
 const win = process.platform === 'win32';
@@ -66,4 +66,23 @@ test('getServices returns real services and skips unknown ones', { skip: !win },
   const rows = await getServices(['wuauserv', 'Definitely-Not-A-Service']);
   assert.deepEqual(rows.map((r) => r.name), ['wuauserv']);
   assert.match(rows[0].startType, /^(Automatic|Manual|Disabled|Boot|System)/);
+});
+
+test('setServiceRunning fails gracefully instead of throwing, for a service that does not exist', { skip: !win }, async () => {
+  const result = await setServiceRunning('Definitely-Not-A-Service', 'start');
+  assert.equal(result.ok, false);
+  assert.equal(typeof result.message, 'string');
+});
+
+test('setServiceRunning can start a real service without admin rights (ClipSVC is designed to be triggered by ordinary Store usage)', { skip: !win }, async () => {
+  const before = await getServices(['ClipSVC']);
+  if (!before.length || before[0].startType === 'Disabled') return; // nothing to prove on a machine without it, or with it Disabled
+  const result = await setServiceRunning('ClipSVC', 'start');
+  assert.equal(result.ok, true, result.message);
+  const after = await getServices(['ClipSVC']);
+  assert.equal(after[0].status, 'Running');
+});
+
+test('scheduleServiceRestore with no services is a no-op', { skip: !win }, () => {
+  assert.doesNotThrow(() => scheduleServiceRestore({ services: [] }));
 });

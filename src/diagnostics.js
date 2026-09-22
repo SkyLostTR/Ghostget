@@ -29,6 +29,8 @@ const SERVICES = [
   { name: 'InstallService', label: 'Microsoft Store Install Service', needed: true },
   { name: 'ClipSVC', label: 'Client License Service', needed: true },
   { name: 'AppXSvc', label: 'AppX Deployment Service', needed: true },
+  { name: 'UsoSvc', label: 'Update Orchestrator Service', needed: true },
+  { name: 'DoSvc', label: 'Delivery Optimization', needed: true },
   { name: 'BITS', label: 'Background Intelligent Transfer Service', needed: false },
   { name: 'wuauserv', label: 'Windows Update', needed: false },
 ];
@@ -118,8 +120,8 @@ export async function runDiagnostics(opts = {}) {
             id,
             label,
             status: 'warn',
-            detail: `${detail}. Not running yet; Windows usually starts it on demand, but if an install stalls with the Store window open, start it yourself.`,
-            fix: `Start-Service -Name ${svc.name}   # run PowerShell as Administrator`,
+            detail: `${detail}. Not running yet; \`install\` starts it itself (and tries to stop it again afterward). Only matters here if you're not using \`install\`.`,
+            fix: `Start-Service -Name ${svc.name}   # only needed outside "ghostget install"; run PowerShell as Administrator`,
           });
         } else if (info.startType !== 'Disabled') {
           checks.push({

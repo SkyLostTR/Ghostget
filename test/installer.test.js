@@ -90,6 +90,20 @@ test('a Disabled Store deployment service is reported, unless the app is WPM', (
   assert.deepEqual(disabledDeploymentServices(allDisabled, 'WindowsUpdate'), ['InstallService', 'ClipSVC', 'AppXSvc']);
 
   assert.deepEqual(disabledDeploymentServices([], 'WindowsUpdate'), [], 'a service ghostget could not read is not assumed Disabled');
+
+  const usoAndDoDisabled = [
+    { name: 'InstallService', startType: 'Manual' },
+    { name: 'ClipSVC', startType: 'Manual' },
+    { name: 'AppXSvc', startType: 'Automatic' },
+    { name: 'UsoSvc', startType: 'Disabled' },
+    { name: 'DoSvc', startType: 'Disabled' },
+  ];
+  assert.deepEqual(
+    disabledDeploymentServices(usoAndDoDisabled, 'WindowsUpdate'),
+    ['UsoSvc', 'DoSvc'],
+    'UsoSvc/DoSvc run the WU fulfillment plugin a WindowsUpdate-delivered download uses, even when InstallService/ClipSVC/AppXSvc are fine',
+  );
+  assert.deepEqual(disabledDeploymentServices(usoAndDoDisabled, 'WPM'), [], 'WPM installs never go through Windows Update at all');
 });
 
 test('a Manual-but-not-Running Store deployment service is reported as stalled, unless the app is WPM', () => {

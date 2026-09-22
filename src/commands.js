@@ -186,6 +186,9 @@ export async function installCommand(ctx) {
           case 'warning':
             ui.warn(event.message);
             break;
+          case 'service-started':
+            ui.ok(`Started ${event.name} (Windows had stopped it)`);
+            break;
           case 'download-start':
             ui.spinner.stop();
             ui.step('Downloading the Microsoft Store installer');
